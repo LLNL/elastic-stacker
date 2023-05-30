@@ -69,6 +69,7 @@ def dump_watches(
         with file_path.open("w") as file:
             file.write(json.dumps(watch["watch"], indent=4))
 
+
 def dump_transforms(
     client: ElasticsearchClient,
     output_directory: Path = Path("./export"),
@@ -76,28 +77,32 @@ def dump_transforms(
     transforms_directory = output_directory / "transforms"
     transforms_directory.mkdir(exist_ok=True)
     for transform in client.depaginate(client.transforms, "transforms", page_size=100):
-        # TODO: strip off "authorization", "version", "created_time" and possibly "id"
-        file_path = transforms_directory / (transform["id"] + ".json")
+        for key in ["authorization", "version", "created_time"]:
+            if key in transform:
+                transform.pop(key)
+        file_path = transforms_directory / (transform.pop("id") + ".json")
         with file_path.open("w") as file:
             file.write(json.dumps(transform, indent=4))
+
 
 def dump_pipelines(
     client: ElasticsearchClient,
     output_directory: Path = Path("./export"),
+    include_managed: bool = False,
 ):
     pipelines_directory = output_directory / "pipelines"
     pipelines_directory.mkdir(exist_ok=True)
     for name, pipeline in client.pipelines().items():
-        # TODO: --include-managed: dump managed pipelines (pipeline["metadata"]["managed"] == True)
-        # otherwise skip these
-        file_path = pipelines_directory / (name + ".json")
-        with file_path.open("w") as file:
-            file.write(json.dumps(pipeline, indent=4))
+        logger.debug(pipeline)
+        if include_managed or not pipeline.get("_meta", {}).get("managed"):
+            file_path = pipelines_directory / (name + ".json")
+            with file_path.open("w") as file:
+                file.write(json.dumps(pipeline, indent=4))
+
 
 def dump_package_policies(
-        client: KibanaClient,
-        output_directory: Path = Path("./export")
-    ):
+    client: KibanaClient, output_directory: Path = Path("./export")
+):
     package_policies_directory = output_directory / "package_policies"
     package_policies_directory.mkdir(exist_ok=True)
     for policy in client.package_policies()["items"]:
@@ -106,10 +111,10 @@ def dump_package_policies(
         with file_path.open("w") as file:
             file.write(json.dumps(policy, indent=4))
 
+
 def dump_agent_policies(
-        client: KibanaClient,
-        output_directory: Path = Path("./export")
-    ):
+    client: KibanaClient, output_directory: Path = Path("./export")
+):
     agent_policies_directory = output_directory / "agent_policies"
     agent_policies_directory.mkdir(exist_ok=True)
     for policy in client.depaginate(client.agent_policies):

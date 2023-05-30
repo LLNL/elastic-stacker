@@ -11,8 +11,8 @@ import tomli
 from schemas import ConfigSchema, StackSchema
 from api_clients import KibanaClient, ElasticsearchClient
 from exporters import (
-    dump_saved_objects, 
-    dump_watches, 
+    dump_saved_objects,
+    dump_watches,
     dump_transforms,
     dump_pipelines,
     dump_package_policies,
@@ -124,9 +124,7 @@ def cli(ctx, config, stack_name, quiet, verbose):
         stack = ctx.obj.stack[stack_name]
     else:
         raise click.BadParameter(
-            "stack '{}' not defined in configuration.".format(
-                stack_name
-            )
+            "stack '{}' not defined in configuration.".format(stack_name)
         )
 
     ctx.obj.stack = stack
@@ -186,20 +184,25 @@ def export_saved_objects_command(obj, types):
 def export_watches_command(obj):
     dump_watches(obj.stack.elasticsearch, output_directory=obj.output)
 
+
 @export_group.command("transforms")
 @click.pass_obj
 def export_transforms_command(obj):
     dump_transforms(obj.stack.elasticsearch, output_directory=obj.output)
 
+
 @export_group.command("pipelines")
 @click.pass_obj
-def export_pipelines_command(obj):
-    dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output)
+@click.option("--include-managed", is_flag=True)
+def export_pipelines_command(obj, include_managed):
+    dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output, include_managed=include_managed)
+
 
 @export_group.command("package-policies")
 @click.pass_obj
 def export_package_policies_command(obj):
     dump_package_policies(obj.stack.kibana, output_directory=obj.output)
+
 
 @export_group.command("agent-policies")
 @click.pass_obj

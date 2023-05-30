@@ -12,25 +12,29 @@ import httpx
 
 logger = logging.getLogger("elastic_stacker")
 
-class ElasticsearchClient(httpx.Client):
 
+class ElasticsearchClient(httpx.Client):
     def pipelines(self, id=None, master_timeout="30s"):
 
-        query_params={"master_timeout": master_timeout} if master_timeout else {}
-        endpoint= urllib.parse.urljoin("_ingest/pipeline/", id) if id else "_ingest/pipeline"
+        query_params = {"master_timeout": master_timeout} if master_timeout else {}
+        endpoint = (
+            urllib.parse.urljoin("_ingest/pipeline/", id) if id else "_ingest/pipeline"
+        )
 
         pipelines_response = self.get(endpoint, params=query_params)
         pipelines_response.raise_for_status()
         return pipelines_response.json()
-    
-    def transforms(self, *args, allow_no_match=True, exclude_generated=False, offset=0, size=100):
-        query_params={
+
+    def transforms(
+        self, *args, allow_no_match=True, exclude_generated=False, offset=0, size=100
+    ):
+        query_params = {
             "allow_no_match": allow_no_match,
             "exclude_generated": exclude_generated,
             "from": offset,
-            "size": size
+            "size": size,
         }
-        endpoint= urllib.parse.urljoin("_transform/", ",".join(args))
+        endpoint = urllib.parse.urljoin("_transform/", ",".join(args))
 
         transforms_response = self.get(endpoint, params=query_params)
         transforms_response.raise_for_status()
@@ -76,9 +80,9 @@ class KibanaClient(httpx.Client):
             kwargs["headers"].update({"kbn-xsrf": "true"})
         else:
             kwargs["headers"] = {"kbn-xsrf": "true"}
-            
-        super().__init__(*args, **kwargs)        
-    
+
+        super().__init__(*args, **kwargs)
+
     def status(self):
         status_response = self.get("/api/status")
         status_response.raise_for_status()
@@ -107,8 +111,10 @@ class KibanaClient(httpx.Client):
         )
         types_response.raise_for_status()
         return types_response.json()
-    
-    def depaginate(self, method:callable, perPage:int=20, start_page:int=1, **kwargs):
+
+    def depaginate(
+        self, method: callable, perPage: int = 20, start_page: int = 1, **kwargs
+    ):
         page = start_page
         index = 0
         total = float("inf")
@@ -119,9 +125,15 @@ class KibanaClient(httpx.Client):
                 yield item
                 index += 1
 
-
-    def agent_policies(self, perPage:int=20, page:int=1, kuery:str=None, full:bool=False, noAgentCount:bool=False):
-        query_params={
+    def agent_policies(
+        self,
+        perPage: int = 20,
+        page: int = 1,
+        kuery: str = None,
+        full: bool = False,
+        noAgentCount: bool = False,
+    ):
+        query_params = {
             "perPage": perPage,
             "page": page,
             "full": full,
@@ -129,12 +141,14 @@ class KibanaClient(httpx.Client):
         }
         if kuery is not None:
             query_params["kuery"] = kuery
-        agent_policies_response = self.get("/api/fleet/agent_policies", params=query_params)
+        agent_policies_response = self.get(
+            "/api/fleet/agent_policies", params=query_params
+        )
         logger.debug(agent_policies_response.content)
         agent_policies_response.raise_for_status()
         return agent_policies_response.json()
-    
-    def package_policies(self, id:str=None):
+
+    def package_policies(self, id: str = None):
         endpoint = "/api/fleet/package_policies"
         if id is not None:
             endpoint = urllib.parse.urljoin(endpoint, id)
@@ -184,4 +198,3 @@ class KibanaClient(httpx.Client):
         response_content = export_response.content.decode("utf-8")
         export_response.raise_for_status()
         return response_content
-    
