@@ -76,6 +76,7 @@ def dump_transforms(
     transforms_directory = output_directory / "transforms"
     transforms_directory.mkdir(exist_ok=True)
     for transform in client.depaginate(client.transforms, "transforms", page_size=100):
+        # TODO: strip off "authorization", "version", "created_time" and possibly "id"
         file_path = transforms_directory / (transform["id"] + ".json")
         with file_path.open("w") as file:
             file.write(json.dumps(transform, indent=4))
@@ -87,6 +88,8 @@ def dump_pipelines(
     pipelines_directory = output_directory / "pipelines"
     pipelines_directory.mkdir(exist_ok=True)
     for name, pipeline in client.pipelines().items():
+        # TODO: --include-managed: dump managed pipelines (pipeline["metadata"]["managed"] == True)
+        # otherwise skip these
         file_path = pipelines_directory / (name + ".json")
         with file_path.open("w") as file:
             file.write(json.dumps(pipeline, indent=4))
