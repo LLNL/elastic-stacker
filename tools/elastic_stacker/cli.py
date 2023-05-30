@@ -14,7 +14,9 @@ from exporters import (
     dump_saved_objects, 
     dump_watches, 
     dump_transforms,
-    dump_pipelines
+    dump_pipelines,
+    dump_package_policies,
+    dump_agent_policies,
 )
 
 CONFIG_FILE_PRECEDENCE = [
@@ -157,13 +159,15 @@ def export_group(ctx: click.Context, output: pathlib.Path):
     ctx.obj.output = output
 
 
-# add to this as I introduce more one-off exporter functions
 @export_group.command("all")
 @click.pass_obj
 def export_all_command(obj):
     dump_saved_objects(obj.stack.kibana, output_directory=obj.output)
     dump_watches(obj.stack.elasticsearch, output_directory=obj.output)
     dump_transforms(obj.stack.elasticsearch, output_directory=obj.output)
+    dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output)
+    dump_package_policies(obj.stack.kibana, output_directory=obj.output)
+    dump_agent_policies(obj.stack.kibana, output_directory=obj.output)
 
 
 @export_group.command("saved-objects")
@@ -193,6 +197,16 @@ def export_transforms_command(obj):
 @click.pass_obj
 def export_pipelines_command(obj):
     dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output)
+
+@export_group.command("package-policies")
+@click.pass_obj
+def export_package_policies_command(obj):
+    dump_package_policies(obj.stack.kibana, output_directory=obj.output)
+
+@export_group.command("agent-policies")
+@click.pass_obj
+def export_package_policies_command(obj):
+    dump_agent_policies(obj.stack.kibana, output_directory=obj.output)
 
 
 if __name__ == "__main__":
