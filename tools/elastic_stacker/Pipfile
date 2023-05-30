@@ -1,0 +1,19 @@
+[[source]]
+url = "https://wci-repo.llnl.gov/repository/pypi-group/simple"
+verify_ssl = false
+name = "pip_conf_index_global"
+
+[packages]
+httpx = "*"
+tomli = "*"
+marshmallow = "*"
+python-slugify = "*"
+dotwiz = "*"
+
+[dev-packages]
+black = "*"
+ipython = "*"
+
+[requires]
+python_version = "3.9"
+python_full_version = "3.9.13"
