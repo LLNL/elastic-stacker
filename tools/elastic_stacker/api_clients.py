@@ -14,8 +14,18 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class ElasticsearchClient(httpx.Client):
+
+    def pipelines(self, id=None, master_timeout="30s"):
+
+        query_params={"master_timeout": master_timeout} if master_timeout else {}
+        endpoint= urllib.parse.urljoin("_ingest/pipeline/", id) if id else "_ingest/pipeline"
+
+        pipelines_response = self.get(endpoint, params=query_params)
+        pipelines_response.raise_for_status()
+        return pipelines_response.json()
+    
     def transforms(self, *args, allow_no_match=True, exclude_generated=False, offset=0, size=100):
-        params={
+        query_params={
             "allow_no_match": allow_no_match,
             "exclude_generated": exclude_generated,
             "from ": offset,
@@ -23,7 +33,7 @@ class ElasticsearchClient(httpx.Client):
         }
         endpoint= urllib.parse.urljoin("_transform/", ",".join(args))
 
-        transforms_response = self.get(endpoint)
+        transforms_response = self.get(endpoint, params=query_params)
         transforms_response.raise_for_status()
         return transforms_response.json()
 

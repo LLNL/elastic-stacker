@@ -13,7 +13,8 @@ from api_clients import KibanaClient, ElasticsearchClient
 from exporters import (
     dump_saved_objects, 
     dump_watches, 
-    dump_transforms
+    dump_transforms,
+    dump_pipelines
 )
 
 CONFIG_FILE_PRECEDENCE = [
@@ -187,6 +188,11 @@ def export_watches_command(obj):
 @click.pass_obj
 def export_transforms_command(obj):
     dump_transforms(obj.stack.elasticsearch, output_directory=obj.output)
+
+@export_group.command("pipelines")
+@click.pass_obj
+def export_pipelines_command(obj):
+    dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output)
 
 
 if __name__ == "__main__":

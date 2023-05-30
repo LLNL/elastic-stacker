@@ -76,8 +76,18 @@ def dump_transforms(
     transforms_directory = output_directory / "transforms"
     transforms_directory.mkdir(exist_ok=True)
     for transform in client.depaginate(client.transforms, "transforms", page_size=100):
-        logger.debug(transform)
         file_path = transforms_directory / (transform["id"] + ".json")
         with file_path.open("w") as file:
             file.write(json.dumps(transform, indent=4))
+
+def dump_pipelines(
+    client: ElasticsearchClient,
+    output_directory: Path = Path("./export"),
+):
+    pipelines_directory = output_directory / "pipelines"
+    pipelines_directory.mkdir(exist_ok=True)
+    for name, pipeline in client.pipelines().items():
+        file_path = pipelines_directory / (name + ".json")
+        with file_path.open("w") as file:
+            file.write(json.dumps(pipeline, indent=4))
 
