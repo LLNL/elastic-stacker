@@ -12,7 +12,6 @@ import httpx
 
 logger = logging.getLogger("elastic_stacker")
 
-
 class ElasticsearchClient(httpx.Client):
 
     def pipelines(self, id=None, master_timeout="30s"):
@@ -28,7 +27,7 @@ class ElasticsearchClient(httpx.Client):
         query_params={
             "allow_no_match": allow_no_match,
             "exclude_generated": exclude_generated,
-            "from ": offset,
+            "from": offset,
             "size": size
         }
         endpoint= urllib.parse.urljoin("_transform/", ",".join(args))
