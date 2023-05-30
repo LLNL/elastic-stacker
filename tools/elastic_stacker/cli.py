@@ -186,9 +186,10 @@ def export_watches_command(obj):
 
 
 @export_group.command("transforms")
+@click.option("--include-managed", is_flag=True)
 @click.pass_obj
-def export_transforms_command(obj):
-    dump_transforms(obj.stack.elasticsearch, output_directory=obj.output)
+def export_transforms_command(obj, include_managed):
+    dump_transforms(obj.stack.elasticsearch, output_directory=obj.output, include_managed=include_managed)
 
 
 @export_group.command("pipelines")

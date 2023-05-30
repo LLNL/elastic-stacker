@@ -73,16 +73,18 @@ def dump_watches(
 def dump_transforms(
     client: ElasticsearchClient,
     output_directory: Path = Path("./export"),
+    include_managed: bool = False
 ):
     transforms_directory = output_directory / "transforms"
     transforms_directory.mkdir(exist_ok=True)
     for transform in client.depaginate(client.transforms, "transforms", page_size=100):
-        for key in ["authorization", "version", "created_time"]:
-            if key in transform:
-                transform.pop(key)
-        file_path = transforms_directory / (transform.pop("id") + ".json")
-        with file_path.open("w") as file:
-            file.write(json.dumps(transform, indent=4))
+        if include_managed or not transform.get("_meta", {}).get("managed"):
+            for key in ["authorization", "version", "created_time"]:
+                if key in transform:
+                    transform.pop(key)
+            file_path = transforms_directory / (transform.pop("id") + ".json")
+            with file_path.open("w") as file:
+                file.write(json.dumps(transform, indent=4))
 
 
 def dump_pipelines(
