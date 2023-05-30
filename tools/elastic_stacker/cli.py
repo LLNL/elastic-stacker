@@ -128,9 +128,7 @@ def cli(ctx, config, stack_name, quiet, verbose):
                 stack_name
             )
         )
-    # test client connections
-    # stack.kibana.health()
-    stack.kibana.status()
+
     ctx.obj.stack = stack
 
 
