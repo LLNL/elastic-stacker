@@ -8,7 +8,7 @@ import pathlib
 import click
 import tomli
 
-from schemas import ConfigSchema, StackSchema
+from schemas import ConfigSchema, ProfileSchema
 from api_clients import KibanaClient, ElasticsearchClient
 from exporters import (
     dump_saved_objects,
@@ -92,10 +92,10 @@ def load_config(ctx, param, config_file: pathlib.Path):
     default=os.getenv("STACKER_CONFIG", CONFIG_FILE_PRECEDENCE[0]),
 )
 @click.option(
-    "-s",
-    "--stack-name",
+    "-p",
+    "--profile-name",
     type=str,
-    help="The name of the Kibana server to use, as configured in the main config file. Defaults to the [defaults.client] table.",
+    help="The name of the configuration profile to use, as configured in the main config file. Defaults to the [default.client] table.",
 )
 @click.option(
     "-q",
@@ -112,22 +112,22 @@ def load_config(ctx, param, config_file: pathlib.Path):
     callback=set_loglevel,
 )
 @click.pass_context
-def cli(ctx, config, stack_name, quiet, verbose):
+def cli(ctx, config, profile_name, quiet, verbose):
     ctx.obj = config
     logger.debug(dict(ctx.obj))
-    if not stack_name:
-        stack = StackSchema().load(dict(ctx.obj.default.stack))
+    if not profile_name:
+        profile = ProfileSchema().load(dict(ctx.obj.default.profile))
         logging.warning(
-            "No stack name specified; using stack defaults from [default.client] table"
+            "No profile name specified; using defaults from [default.profile] table"
         )
-    elif ctx.obj.stack[stack_name]:
-        stack = ctx.obj.stack[stack_name]
+    elif ctx.obj.profile[profile_name]:
+        profile = ctx.obj.profile[profile_name]
     else:
         raise click.BadParameter(
-            "stack '{}' not defined in configuration.".format(stack_name)
+            "profile '{}' not defined in configuration.".format(profile_name)
         )
 
-    ctx.obj.stack = stack
+    ctx.obj = profile
 
 
 @cli.group("export")
@@ -158,12 +158,12 @@ def export_group(ctx: click.Context, output: pathlib.Path):
 @export_group.command("all")
 @click.pass_obj
 def export_all_command(obj):
-    dump_saved_objects(obj.stack.kibana, output_directory=obj.output)
-    dump_watches(obj.stack.elasticsearch, output_directory=obj.output)
-    dump_transforms(obj.stack.elasticsearch, output_directory=obj.output)
-    dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output)
-    dump_package_policies(obj.stack.kibana, output_directory=obj.output)
-    dump_agent_policies(obj.stack.kibana, output_directory=obj.output)
+    dump_saved_objects(obj.kibana, output_directory=obj.output)
+    dump_watches(obj.elasticsearch, output_directory=obj.output)
+    dump_transforms(obj.elasticsearch, output_directory=obj.output)
+    dump_pipelines(obj.elasticsearch, output_directory=obj.output)
+    dump_package_policies(obj.kibana, output_directory=obj.output)
+    dump_agent_policies(obj.kibana, output_directory=obj.output)
 
 
 @export_group.command("saved-objects")
@@ -176,39 +176,39 @@ def export_saved_objects_command(obj, types):
         logger.warning("No types specified, passing None and exporting all types")
         types = None
 
-    dump_saved_objects(obj.stack.kibana, types=types, output_directory=obj.output)
+    dump_saved_objects(obj.kibana, types=types, output_directory=obj.output)
 
 
 @export_group.command("watches")
 @click.pass_obj
 def export_watches_command(obj):
-    dump_watches(obj.stack.elasticsearch, output_directory=obj.output)
+    dump_watches(obj.elasticsearch, output_directory=obj.output)
 
 
 @export_group.command("transforms")
 @click.option("--include-managed", is_flag=True)
 @click.pass_obj
 def export_transforms_command(obj, include_managed):
-    dump_transforms(obj.stack.elasticsearch, output_directory=obj.output, include_managed=include_managed)
+    dump_transforms(obj.elasticsearch, output_directory=obj.output, include_managed=include_managed)
 
 
 @export_group.command("pipelines")
 @click.pass_obj
 @click.option("--include-managed", is_flag=True)
 def export_pipelines_command(obj, include_managed):
-    dump_pipelines(obj.stack.elasticsearch, output_directory=obj.output, include_managed=include_managed)
+    dump_pipelines(obj.elasticsearch, output_directory=obj.output, include_managed=include_managed)
 
 
 @export_group.command("package-policies")
 @click.pass_obj
 def export_package_policies_command(obj):
-    dump_package_policies(obj.stack.kibana, output_directory=obj.output)
+    dump_package_policies(obj.kibana, output_directory=obj.output)
 
 
 @export_group.command("agent-policies")
 @click.pass_obj
 def export_package_policies_command(obj):
-    dump_agent_policies(obj.stack.kibana, output_directory=obj.output)
+    dump_agent_policies(obj.kibana, output_directory=obj.output)
 
 
 if __name__ == "__main__":

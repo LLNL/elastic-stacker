@@ -117,7 +117,7 @@ class ElasticsearchClientSchema(APIClientConfigSchema):
         return ElasticsearchClient(**data)
 
 
-class StackConfigSchema(APIClientConfigSchema):
+class ProfileConfigSchema(APIClientConfigSchema):
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
 
@@ -146,7 +146,7 @@ class StackConfigSchema(APIClientConfigSchema):
         return final_data
 
 
-class StackSchema(StackConfigSchema):
+class ProfileSchema(ProfileConfigSchema):
     @post_load
     def make_clients(self, data, **kwargs):
         data["kibana"] = KibanaClient(**data["kibana"])
@@ -155,12 +155,12 @@ class StackSchema(StackConfigSchema):
 
 
 class DefaultsConfigSchema(Schema):
-    stack = fields.Nested(StackConfigSchema())
+    profile = fields.Nested(ProfileConfigSchema())
 
 
 class ConfigSchema(Schema):
     default = fields.Nested(DefaultsConfigSchema())
-    stack = fields.Mapping(fields.String(), fields.Nested(StackSchema()))
+    profile = fields.Mapping(fields.String(), fields.Nested(ProfileSchema()))
 
     @pre_load
     def populate_defaults(self, data, **kwargs):
