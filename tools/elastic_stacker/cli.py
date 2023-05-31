@@ -207,8 +207,9 @@ def export_package_policies_command(obj):
 
 @export_group.command("agent-policies")
 @click.pass_obj
-def export_package_policies_command(obj):
-    dump_agent_policies(obj.kibana, output_directory=obj.output)
+@click.option("--include-managed", is_flag=True)
+def export_package_policies_command(obj, include_managed):
+    dump_agent_policies(obj.kibana, output_directory=obj.output, include_managed=include_managed)
 
 
 if __name__ == "__main__":
