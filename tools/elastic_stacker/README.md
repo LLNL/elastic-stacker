@@ -18,7 +18,7 @@ A main use case is for moving from development done in a PRE environment, and in
     # Update any configuration options needed:
     vim stacker.toml
     ```
-6. Run the tool (more detailed usage below): `./cli.py -e <pre|prod> export all`
+6. Run the tool (more detailed usage below): `./cli.py -p <pre|prod> export all`
 
 
 ## Usage
