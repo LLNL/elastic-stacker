@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import tempfile
 from pathlib import Path
 from collections.abc import Iterable
 
@@ -125,3 +126,38 @@ def dump_agent_policies(
             file_path = agent_policies_directory / filename
             with file_path.open("w") as file:
                 file.write(json.dumps(policy, indent=4))
+
+def load_saved_objects(
+    client: KibanaClient, 
+    output_directory: Path = Path("./export"), 
+    intermediate_file_max_size:float=5e8, # 500 MB
+    overwrite:bool = True
+):
+    so_file = output_directory / "saved_objects.ndjson"
+    so_dir = output_directory / "saved_objects"
+
+    # We could just iterate over all the files and POST them all individually,
+    # but that'd be awful slow so we can instead send them all as one batch
+    # by first concatenating them into this temporary file-like object in memory.
+    with tempfile.SpooledTemporaryFile(
+        mode="ab+", 
+        max_size=intermediate_file_max_size
+    ) as intermediate_file:
+        if so_file.exists():
+            assert so_file.is_file()
+            with so_file.open("rb") as fh:
+                intermediate_file.write(fh.read())  # This assumes that the size of the saved objects file is not too large to hold in memory.
+                intermediate_file.write(b"\n")
+        if so_dir.exists():
+            assert so_dir.is_dir()
+            for object_file in so_dir.glob("*/*.json"):
+                with object_file.open("rb") as fh:
+                    # kibana doesn't like the pretty-printing,
+                    # so we have to flatten it down one line each.
+                    object = json.load(fh)
+                    object_string = json.dumps(object)
+                    intermediate_file.write(str.encode(object_string))
+                    intermediate_file.write(b"\n")
+        # jump back to the start of the file
+        intermediate_file.seek(0)
+        client.import_saved_objects(intermediate_file, overwrite=overwrite, create_new_copies=(not overwrite))

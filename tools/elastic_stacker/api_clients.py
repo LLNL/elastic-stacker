@@ -156,6 +156,45 @@ class KibanaClient(httpx.Client):
         package_policies_response = self.get("/api/fleet/package_policies")
         package_policies_response.raise_for_status()
         return package_policies_response.json()
+    
+    def import_saved_objects(
+            self,
+            file:typing.BinaryIO,
+            space_id:str=None,
+            create_new_copies: bool = None,
+            overwrite: bool = None,
+            compatibility_mode: bool = None,
+    ):
+        
+        base_endpoint = "saved_objects/_import"
+        prefix = "api/" if space_id is None else urllib.parse.urljoin("s/", space_id) + "/"
+        endpoint = urllib.parse.urljoin(prefix, base_endpoint)
+
+        query_params = {}
+        if create_new_copies:
+            query_params["createNewCopies"] = create_new_copies
+        if overwrite:
+            query_params["overwrite"] = overwrite
+        if compatibility_mode:
+            query_params["compatibilityMode"] = compatibility_mode
+
+        # temporary files get unhelpful or blank names, and Kibana expects specific file extensions on the name
+        # so we'll pretend whatever stream we're fed comes from an ndjson file.
+        if not file.name:
+            upload_filename = "export.ndjson"
+        elif not file.name.endswith(".ndjson"):
+            upload_filename += ".ndjson"
+        else:
+            upload_filename = file.name
+
+        files = {"file": (upload_filename, file, "application/ndjson")}
+
+        response = self.post(endpoint, params=query_params, files=files)
+        logger.debug(response.content)
+        response.raise_for_status()
+        return response.json()
+
+
 
     def export_saved_objects(
         self,

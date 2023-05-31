@@ -17,6 +17,7 @@ from exporters import (
     dump_pipelines,
     dump_package_policies,
     dump_agent_policies,
+    load_saved_objects,
 )
 
 CONFIG_FILE_PRECEDENCE = [
@@ -133,37 +134,37 @@ def cli(ctx, config, profile_name, quiet, verbose):
 @cli.group("export")
 @click.pass_context
 @click.option(
-    "-o",
-    "--output",
+    "-d",
+    "--data_directory",
     type=click.Path(file_okay=False, writable=True, path_type=pathlib.Path),
     help="The directory where the exported files should be written.",
     default=pathlib.Path("./export"),
 )
-def export_group(ctx: click.Context, output: pathlib.Path):
-    output = output.expanduser()
-    if output.exists():
-        logger.warning("Output directory {} already exists.".format(output))
-        if len(list(output.iterdir())):
+def export_group(ctx: click.Context, data_directory: pathlib.Path):
+    data_directory = data_directory.expanduser()
+    if data_directory.exists():
+        logger.warning("Data directory {} already exists.".format(data_directory))
+        if len(list(data_directory.iterdir())):
             logger.warning(
                 "Output directory {} already contains data, this will overwrite it.".format(
-                    output.absolute()
+                    data_directory.absolute()
                 )
             )
     else:  # no need to catch is_file -- Click will catch that before it gets here
-        output.mkdir()
+        data_directory.mkdir()
 
-    ctx.obj.output = output
+    ctx.obj.data_directory = data_directory
 
 
 @export_group.command("all")
 @click.pass_obj
 def export_all_command(obj):
-    dump_saved_objects(obj.kibana, output_directory=obj.output)
-    dump_watches(obj.elasticsearch, output_directory=obj.output)
-    dump_transforms(obj.elasticsearch, output_directory=obj.output)
-    dump_pipelines(obj.elasticsearch, output_directory=obj.output)
-    dump_package_policies(obj.kibana, output_directory=obj.output)
-    dump_agent_policies(obj.kibana, output_directory=obj.output)
+    dump_saved_objects(obj.kibana, output_directory=obj.data_directory)
+    dump_watches(obj.elasticsearch, output_directory=obj.data_directory)
+    dump_transforms(obj.elasticsearch, output_directory=obj.data_directory)
+    dump_pipelines(obj.elasticsearch, output_directory=obj.data_directory)
+    dump_package_policies(obj.kibana, output_directory=obj.data_directory)
+    dump_agent_policies(obj.kibana, output_directory=obj.data_directory)
 
 
 @export_group.command("saved-objects")
@@ -176,40 +177,64 @@ def export_saved_objects_command(obj, types):
         logger.warning("No types specified, passing None and exporting all types")
         types = None
 
-    dump_saved_objects(obj.kibana, types=types, output_directory=obj.output)
+    dump_saved_objects(obj.kibana, types=types, output_directory=obj.data_directory)
 
 
 @export_group.command("watches")
 @click.pass_obj
 def export_watches_command(obj):
-    dump_watches(obj.elasticsearch, output_directory=obj.output)
+    dump_watches(obj.elasticsearch, output_directory=obj.data_directory)
 
 
 @export_group.command("transforms")
 @click.option("--include-managed", is_flag=True)
 @click.pass_obj
 def export_transforms_command(obj, include_managed):
-    dump_transforms(obj.elasticsearch, output_directory=obj.output, include_managed=include_managed)
+    dump_transforms(obj.elasticsearch, output_directory=obj.data_directory, include_managed=include_managed)
 
 
 @export_group.command("pipelines")
 @click.pass_obj
 @click.option("--include-managed", is_flag=True)
 def export_pipelines_command(obj, include_managed):
-    dump_pipelines(obj.elasticsearch, output_directory=obj.output, include_managed=include_managed)
+    dump_pipelines(obj.elasticsearch, output_directory=obj.data_directory, include_managed=include_managed)
 
 
 @export_group.command("package-policies")
 @click.pass_obj
 def export_package_policies_command(obj):
-    dump_package_policies(obj.kibana, output_directory=obj.output)
+    dump_package_policies(obj.kibana, output_directory=obj.data_directory)
 
 
 @export_group.command("agent-policies")
 @click.pass_obj
 @click.option("--include-managed", is_flag=True)
 def export_package_policies_command(obj, include_managed):
-    dump_agent_policies(obj.kibana, output_directory=obj.output, include_managed=include_managed)
+    dump_agent_policies(obj.kibana, output_directory=obj.data_directory, include_managed=include_managed)
+
+
+@cli.group("import")
+@click.pass_context
+@click.option(
+    "-d",
+    "--data_directory",
+    type=click.Path(file_okay=False, exists=True, readable=True, path_type=pathlib.Path),
+    help="The directory where the imported files should be read from.",
+    default=pathlib.Path("./export"),
+)
+def import_group(ctx: click.Context, data_directory: pathlib.Path):
+    ctx.obj.data_directory = data_directory.expanduser()
+
+@import_group.command("all")
+@click.pass_obj
+def import_all_command(obj):
+    load_saved_objects(obj.kibana, output_directory=obj.data_directory)
+
+@import_group.command("saved-objects")
+# TODO add --overwrite flag
+@click.pass_obj
+def import_saved_objects_command(obj):
+    load_saved_objects(obj.kibana, output_directory=obj.data_directory)
 
 
 if __name__ == "__main__":
