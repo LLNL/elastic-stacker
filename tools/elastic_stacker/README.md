@@ -29,7 +29,7 @@ Running the tools
 # Export all the user configurations from LC Elastic Pre
 # Export should go in to the `files/` directory at the top of this repo
 # this is so that the resulting exported objects can be tracked in git.
-./cli.py -e pre -o $(git rev-parse --show-toplevel)/files/ export all
+./cli.py -e pre -d $(git rev-parse --show-toplevel)/files/ export all
 
 # Check the changes that resulted from the export, make sure things look expected
 git diff
