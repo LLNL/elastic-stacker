@@ -4,6 +4,7 @@ import logging
 import tempfile
 from pathlib import Path
 from collections.abc import Iterable
+import httpx
 
 from slugify import slugify
 
@@ -68,24 +69,32 @@ def dump_watches(
     for watch in client.depaginate(client.query_watches, "watches", page_size=10):
         file_path = watches_directory / (watch["_id"] + ".json")
         with file_path.open("w") as file:
-            file.write(json.dumps(watch["watch"], indent=4))
+            file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))
 
 
 def dump_transforms(
     client: ElasticsearchClient,
     output_directory: Path = Path("./export"),
-    include_managed: bool = False
+    include_managed: bool = False,
 ):
     transforms_directory = output_directory / "transforms"
     transforms_directory.mkdir(exist_ok=True)
     for transform in client.depaginate(client.transforms, "transforms", page_size=100):
         if include_managed or not transform.get("_meta", {}).get("managed"):
-            for key in ["authorization", "version", "created_time"]:
+            for key in ["authorization", "version", "create_time"]:
                 if key in transform:
                     transform.pop(key)
             file_path = transforms_directory / (transform.pop("id") + ".json")
             with file_path.open("w") as file:
-                file.write(json.dumps(transform, indent=4))
+                file.write(json.dumps(transform, indent=4, sort_keys=True))
+
+    # we also need to know whether a transform was started at the time it was dumped
+    stats = {}
+    for transform in client.depaginate(client.transform_stats, "transforms", page_size=100):
+        stats[transform["id"]] = transform
+    transform_stats_file = transforms_directory / "_stats.json"
+    with transform_stats_file.open("w") as file:
+        file.write(json.dumps(stats, indent=4, sort_keys=True))
 
 
 def dump_pipelines(
@@ -103,6 +112,63 @@ def dump_pipelines(
                 file.write(json.dumps(pipeline, indent=4))
 
 
+def load_pipelines(
+    client: ElasticsearchClient,
+    data_directory: Path = Path("./export"),
+):
+    pipelines_directory = data_directory / "pipelines"
+    if pipelines_directory.is_dir():
+        for pipeline_file in pipelines_directory.glob("*.json"):
+            with pipeline_file.open("r") as fh:
+                pipeline = json.load(fh)
+            pipeline_id = pipeline_file.stem
+            client.create_pipeline(pipeline_id, pipeline)
+
+
+def load_transforms(
+    client: ElasticsearchClient,
+    data_directory: Path = Path("./export"),
+):
+    transforms_directory = data_directory / "transforms"
+    if transforms_directory.is_dir():
+        # create a map of all transforms by id
+        transforms_generator = client.depaginate(
+            client.transforms, "transforms", page_size=100
+        )
+        transforms_map = {
+            transform["id"]: transform for transform in transforms_generator
+        }
+
+        stats_file = transforms_directory / "_stats.json"
+        with stats_file.open("r") as fh:
+            reference_stats = json.load(fh)
+
+        current_stats = {t["id"]:t for t in client.depaginate(client.transform_stats, "transforms", page_size=100)}
+
+        for transform_file in transforms_directory.glob("*.json"):
+            if transform_file == stats_file:
+                continue
+            logger.debug("Loading {}".format(transform_file))
+            transform_id = transform_file.stem
+            with transform_file.open("r") as fh:
+                loaded_transform = json.load(fh)
+            if transform_id in transforms_map:
+                logger.info("Transform {} already exists.".format(transform_id))
+                # the transform already exists; if it's changed we need to delete and recreate it
+                existing_transform = transforms_map[transform_id]
+                for key, loaded_value in loaded_transform.items():
+                    if loaded_value != existing_transform[key]:
+                        logger.info("Transform {} differs by key {}, deleting and recreating.".format(transform_id, key))
+                        client.stop_transform(transform_id, wait_for_completion=True)
+                        client.delete_transform(transform_id)
+                        client.create_transform(transform_id, loaded_transform)
+                        break
+            else:
+                logger.info("Creating new transform with id {}".format(transform_id, key))
+                client.create_transform(transform_id, loaded_transform)
+            client.set_transform_state(transform_id, target_state=reference_stats[transform_id]["state"])
+
+
 def dump_package_policies(
     client: KibanaClient, output_directory: Path = Path("./export")
 ):
@@ -116,7 +182,9 @@ def dump_package_policies(
 
 
 def dump_agent_policies(
-    client: KibanaClient, output_directory: Path = Path("./export"), include_managed:bool = False
+    client: KibanaClient,
+    output_directory: Path = Path("./export"),
+    include_managed: bool = False,
 ):
     agent_policies_directory = output_directory / "agent_policies"
     agent_policies_directory.mkdir(exist_ok=True)
@@ -127,26 +195,28 @@ def dump_agent_policies(
             with file_path.open("w") as file:
                 file.write(json.dumps(policy, indent=4))
 
+
 def load_saved_objects(
-    client: KibanaClient, 
-    output_directory: Path = Path("./export"), 
-    intermediate_file_max_size:float=5e8, # 500 MB
-    overwrite:bool = True
+    client: KibanaClient,
+    data_directory: Path = Path("./export"),
+    intermediate_file_max_size: float = 5e8,  # 500 MB
+    overwrite: bool = True,
 ):
-    so_file = output_directory / "saved_objects.ndjson"
-    so_dir = output_directory / "saved_objects"
+    so_file = data_directory / "saved_objects.ndjson"
+    so_dir = data_directory / "saved_objects"
 
     # We could just iterate over all the files and POST them all individually,
     # but that'd be awful slow so we can instead send them all as one batch
     # by first concatenating them into this temporary file-like object in memory.
     with tempfile.SpooledTemporaryFile(
-        mode="ab+", 
-        max_size=intermediate_file_max_size
+        mode="ab+", max_size=intermediate_file_max_size
     ) as intermediate_file:
         if so_file.exists():
             assert so_file.is_file()
             with so_file.open("rb") as fh:
-                intermediate_file.write(fh.read())  # This assumes that the size of the saved objects file is not too large to hold in memory.
+                intermediate_file.write(
+                    fh.read()
+                )  # This assumes that the size of the saved objects file is not too large to hold in memory.
                 intermediate_file.write(b"\n")
         if so_dir.exists():
             assert so_dir.is_dir()
@@ -160,4 +230,6 @@ def load_saved_objects(
                     intermediate_file.write(b"\n")
         # jump back to the start of the file
         intermediate_file.seek(0)
-        client.import_saved_objects(intermediate_file, overwrite=overwrite, create_new_copies=(not overwrite))
+        client.import_saved_objects(
+            intermediate_file, overwrite=overwrite, create_new_copies=(not overwrite)
+        )

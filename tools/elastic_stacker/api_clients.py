@@ -25,6 +25,27 @@ class ElasticsearchClient(httpx.Client):
         pipelines_response.raise_for_status()
         return pipelines_response.json()
 
+    def create_pipeline(
+        self,
+        id: str,
+        pipeline: dict,
+        if_version: int = None,
+        master_timeout: str = None,
+        timeout: str = None,
+    ):
+        endpoint = urllib.parse.urljoin("_ingest/pipeline/", id)
+        query_params = {}
+        if if_version is not None:
+            query_params["if_version"] = if_version
+        if master_timeout is not None:
+            query_params["master_timeout"] = master_timeout
+        if timeout is not None:
+            query_params["timeout"] = timeout
+
+        response = self.put(endpoint, json=pipeline, params=query_params)
+        response.raise_for_status()
+        return response.json()
+
     def transforms(
         self, *args, allow_no_match=True, exclude_generated=False, offset=0, size=100
     ):
@@ -39,6 +60,147 @@ class ElasticsearchClient(httpx.Client):
         transforms_response = self.get(endpoint, params=query_params)
         transforms_response.raise_for_status()
         return transforms_response.json()
+    
+    def transform_stats(
+        self, *args, allow_no_match=True, offset=0, size=100
+    ):
+        query_params = {
+            "allow_no_match": allow_no_match,
+            "from": offset,
+            "size": size,
+        }
+
+        if not args:
+            args = ["_all"]
+        endpoint = "_transform/{}/_stats".format(",".join(args))
+
+        transforms_response = self.get(endpoint, params=query_params)
+        logger.debug(transforms_response.json())
+        transforms_response.raise_for_status()
+        return transforms_response.json()
+
+    def create_transform(
+        self,
+        id: str,
+        transform: dict,
+        defer_validation: bool = None,
+        timeout: str = None,
+    ):
+        endpoint = urllib.parse.urljoin("_transform/", id)
+
+        query_params = {"defer_validation": defer_validation, "timeout": timeout}
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+        response = self.put(endpoint, json=transform, params=query_params)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return response.json()
+
+    def set_transform_state(
+        self,
+        id: str,
+        target_state: str,
+        timeout: str = None,
+    ):
+        started_states = {"started", "indexing"}
+        stopped_states = {"failed", "stopped", "stopping", "aborted"}
+        allowed_states = started_states.union(stopped_states)
+
+        if target_state not in allowed_states:
+            err_msg = "{} is not a valid state for transforms; acceptable values are {}.".format(target_state, allowed_states)
+            logger.error(err_msg)
+            # TODO: this should be some more specific subclass of Exception
+            raise Exception(err_msg)
+
+        current_stats = self.transform_stats(id)
+        current_state = current_stats["transforms"][0]["state"]
+        
+        if target_state in started_states:
+            if current_state in started_states:
+                logger.debug("transform {} is already started".format(id))
+            else:
+                self.start_transform(id, timeout=timeout)
+        else: # target_state in stopped_states
+            if current_state in stopped_states:
+                logger.debug("transform {} is already stopped".format(id))
+            else:
+                self.stop_transform(id, timeout=timeout)
+   
+    def start_transform(
+        self,
+        id: str,
+        from_time: str = None,
+        timeout: str = None,
+    ):
+        endpoint = "_transform/{}/_start".format(id)
+        query_params = {
+            "from": from_time,
+            "timeout": timeout
+        }
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+
+        response = self.post(endpoint, params=query_params)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return response.json()
+    
+    def stop_transform(
+        self,
+        id: str,
+        force: bool = None,
+        allow_no_match: bool = None,
+        wait_for_checkpoint: bool = None,
+        wait_for_completion: bool = None,
+        timeout: str = None,
+    ):
+        endpoint = "_transform/{}/_stop".format(id)
+        query_params = {
+            "force":force,
+            "allow_no_match":allow_no_match,
+            "wait_for_checkpoint":wait_for_checkpoint,
+            "wait_for_completion":wait_for_completion,
+            "timeout":timeout
+        }
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+
+        response = self.post(endpoint, params=query_params)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return response.json()
+    
+    def delete_transform(
+        self,
+        id: str,
+        force: bool = None,
+        delete_dest_index: bool = None,
+        timeout: str = None,
+    ):
+        endpoint = urllib.parse.urljoin("_transform/", id)
+        query_params = {
+            "force": force,
+            "delete_dest_index": delete_dest_index,
+            "timeout": timeout,
+        }
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+        response = self.delete(endpoint, params=query_params)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return response.json()
+
+    def update_transform(
+        self,
+        id: str,
+        transform: dict,
+        defer_validation: bool = None,
+        timeout: str = None,
+    ):
+        endpoint = "_transform/{}/_update".format(id)
+
+        query_params = {"defer_validation": defer_validation, "timeout": timeout}
+        query_params = {k: v for k, v in query_params.items() if v is not None}
+        response = self.post(endpoint, json=transform, params=query_params)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return response.json()
 
     def query_watches(
         self,
@@ -156,18 +318,20 @@ class KibanaClient(httpx.Client):
         package_policies_response = self.get("/api/fleet/package_policies")
         package_policies_response.raise_for_status()
         return package_policies_response.json()
-    
+
     def import_saved_objects(
-            self,
-            file:typing.BinaryIO,
-            space_id:str=None,
-            create_new_copies: bool = None,
-            overwrite: bool = None,
-            compatibility_mode: bool = None,
+        self,
+        file: typing.BinaryIO,
+        space_id: str = None,
+        create_new_copies: bool = None,
+        overwrite: bool = None,
+        compatibility_mode: bool = None,
     ):
-        
+
         base_endpoint = "saved_objects/_import"
-        prefix = "api/" if space_id is None else urllib.parse.urljoin("s/", space_id) + "/"
+        prefix = (
+            "api/" if space_id is None else urllib.parse.urljoin("s/", space_id) + "/"
+        )
         endpoint = urllib.parse.urljoin(prefix, base_endpoint)
 
         query_params = {}
@@ -193,8 +357,6 @@ class KibanaClient(httpx.Client):
         logger.debug(response.content)
         response.raise_for_status()
         return response.json()
-
-
 
     def export_saved_objects(
         self,

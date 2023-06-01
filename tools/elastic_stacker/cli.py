@@ -18,6 +18,8 @@ from exporters import (
     dump_package_policies,
     dump_agent_policies,
     load_saved_objects,
+    load_pipelines,
+    load_transforms,
 )
 
 CONFIG_FILE_PRECEDENCE = [
@@ -235,6 +237,16 @@ def import_all_command(obj):
 @click.pass_obj
 def import_saved_objects_command(obj):
     load_saved_objects(obj.kibana, output_directory=obj.data_directory)
+
+@import_group.command("pipelines")
+@click.pass_obj
+def import_pipelines_command(obj):
+    load_pipelines(obj.elasticsearch, data_directory=obj.data_directory)
+
+@import_group.command("transforms")
+@click.pass_obj
+def import_transforms_command(obj):
+    load_transforms(obj.elasticsearch, data_directory=obj.data_directory)
 
 
 if __name__ == "__main__":
