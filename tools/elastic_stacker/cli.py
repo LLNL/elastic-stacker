@@ -231,6 +231,8 @@ def import_group(ctx: click.Context, data_directory: pathlib.Path):
 @click.pass_obj
 def import_all_command(obj):
     load_saved_objects(obj.kibana, output_directory=obj.data_directory)
+    load_pipelines(obj.transforms, output_directory=obj.data_directory)
+    load_transforms(obj.transforms, output_directory=obj.data_directory)
 
 @import_group.command("saved-objects")
 # TODO add --overwrite flag
