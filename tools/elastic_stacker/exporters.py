@@ -71,6 +71,31 @@ def dump_watches(
         with file_path.open("w") as file:
             file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))
 
+def dump_enrich_policies(
+        client: ElasticsearchClient,
+        output_directory: Path = Path("./export")
+):
+    enrich_policies_directory = output_directory / "enrich_policies"
+    enrich_policies_directory.mkdir(exist_ok=True)
+    for policy in client.enrich_policies()["policies"]:
+        filename = policy["config"]["match"]["name"] + ".json"
+        policy_file = enrich_policies_directory / filename
+        policy = policy["config"]
+        policy["match"].pop("name")
+        with policy_file.open("w") as fh:
+            fh.write(json.dumps(policy, sort_keys=True, indent=4))
+
+def load_enrich_policies(
+    client: ElasticsearchClient,
+    data_directory: Path = Path("./export"),
+):
+    enrich_policies_directory = data_directory / "enrich_policies"
+    if enrich_policies_directory.is_dir():
+        for policy_file in enrich_policies_directory.glob("*.json"):
+            with policy_file.open("r") as fh:
+                policy = json.load(fh)
+            policy_name = policy_file.stem
+            client.create_enrich_policy(policy_name, policy)
 
 def dump_transforms(
     client: ElasticsearchClient,
@@ -161,12 +186,12 @@ def load_transforms(
                         logger.info("Transform {} differs by key {}, deleting and recreating.".format(transform_id, key))
                         client.stop_transform(transform_id, wait_for_completion=True)
                         client.delete_transform(transform_id)
-                        client.create_transform(transform_id, loaded_transform)
+                        client.create_transform(transform_id, loaded_transform, defer_validation=True)
                         break
             else:
                 logger.info("Creating new transform with id {}".format(transform_id, key))
-                client.create_transform(transform_id, loaded_transform)
-            client.set_transform_state(transform_id, target_state=reference_stats[transform_id]["state"])
+                client.create_transform(transform_id, loaded_transform, defer_validation=True)
+            # client.set_transform_state(transform_id, target_state=reference_stats[transform_id]["state"])
 
 
 def dump_package_policies(

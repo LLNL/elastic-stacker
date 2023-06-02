@@ -17,6 +17,8 @@ from exporters import (
     dump_pipelines,
     dump_package_policies,
     dump_agent_policies,
+    dump_enrich_policies,
+    load_enrich_policies,
     load_saved_objects,
     load_pipelines,
     load_transforms,
@@ -214,6 +216,11 @@ def export_package_policies_command(obj):
 def export_package_policies_command(obj, include_managed):
     dump_agent_policies(obj.kibana, output_directory=obj.data_directory, include_managed=include_managed)
 
+@export_group.command("enrich-policies")
+@click.pass_obj
+def export_enrich_policies_command(obj):
+    dump_enrich_policies(obj.elasticsearch, output_directory=obj.data_directory)
+
 
 @cli.group("import")
 @click.pass_context
@@ -230,20 +237,25 @@ def import_group(ctx: click.Context, data_directory: pathlib.Path):
 @import_group.command("all")
 @click.pass_obj
 def import_all_command(obj):
-    load_saved_objects(obj.kibana, output_directory=obj.data_directory)
-    load_pipelines(obj.transforms, output_directory=obj.data_directory)
-    load_transforms(obj.transforms, output_directory=obj.data_directory)
+    load_saved_objects(obj.kibana, data_directory=obj.data_directory)
+    load_pipelines(obj.transforms, data_directory=obj.data_directory)
+    load_transforms(obj.transforms, data_directory=obj.data_directory)
 
 @import_group.command("saved-objects")
 # TODO add --overwrite flag
 @click.pass_obj
 def import_saved_objects_command(obj):
-    load_saved_objects(obj.kibana, output_directory=obj.data_directory)
+    load_saved_objects(obj.kibana, data_directory=obj.data_directory)
 
 @import_group.command("pipelines")
 @click.pass_obj
 def import_pipelines_command(obj):
     load_pipelines(obj.elasticsearch, data_directory=obj.data_directory)
+
+@import_group.command("enrich-policies")
+@click.pass_obj
+def import_enrich_policies_command(obj):
+    load_enrich_policies(obj.elasticsearch, data_directory=obj.data_directory)
 
 @import_group.command("transforms")
 @click.pass_obj

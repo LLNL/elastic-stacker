@@ -43,6 +43,7 @@ class ElasticsearchClient(httpx.Client):
             query_params["timeout"] = timeout
 
         response = self.put(endpoint, json=pipeline, params=query_params)
+        logger.debug(response.json())
         response.raise_for_status()
         return response.json()
 
@@ -200,6 +201,19 @@ class ElasticsearchClient(httpx.Client):
         response = self.post(endpoint, json=transform, params=query_params)
         logger.debug(response.json())
         response.raise_for_status()
+        return response.json()
+
+    def enrich_policies(self, *args):
+        endpoint = "_enrich/policy/{}".format(",".join(args))
+        response = self.get(endpoint)
+        response.raise_for_status()
+        return response.json()
+    
+    def create_enrich_policy(self, name: str, policy:dict):
+        endpoint = "_enrich/policy/{}".format(name)
+        response = self.put(endpoint, json=policy)
+        logger.debug(response.json())
+        # response.raise_for_status()
         return response.json()
 
     def query_watches(
