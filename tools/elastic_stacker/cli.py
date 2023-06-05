@@ -22,6 +22,7 @@ from exporters import (
     load_saved_objects,
     load_pipelines,
     load_transforms,
+    load_package_policies,
 )
 
 CONFIG_FILE_PRECEDENCE = [
@@ -194,14 +195,22 @@ def export_watches_command(obj):
 @click.option("--include-managed", is_flag=True)
 @click.pass_obj
 def export_transforms_command(obj, include_managed):
-    dump_transforms(obj.elasticsearch, output_directory=obj.data_directory, include_managed=include_managed)
+    dump_transforms(
+        obj.elasticsearch,
+        output_directory=obj.data_directory,
+        include_managed=include_managed,
+    )
 
 
 @export_group.command("pipelines")
 @click.pass_obj
 @click.option("--include-managed", is_flag=True)
 def export_pipelines_command(obj, include_managed):
-    dump_pipelines(obj.elasticsearch, output_directory=obj.data_directory, include_managed=include_managed)
+    dump_pipelines(
+        obj.elasticsearch,
+        output_directory=obj.data_directory,
+        include_managed=include_managed,
+    )
 
 
 @export_group.command("package-policies")
@@ -214,7 +223,10 @@ def export_package_policies_command(obj):
 @click.pass_obj
 @click.option("--include-managed", is_flag=True)
 def export_package_policies_command(obj, include_managed):
-    dump_agent_policies(obj.kibana, output_directory=obj.data_directory, include_managed=include_managed)
+    dump_agent_policies(
+        obj.kibana, output_directory=obj.data_directory, include_managed=include_managed
+    )
+
 
 @export_group.command("enrich-policies")
 @click.pass_obj
@@ -227,12 +239,15 @@ def export_enrich_policies_command(obj):
 @click.option(
     "-d",
     "--data_directory",
-    type=click.Path(file_okay=False, exists=True, readable=True, path_type=pathlib.Path),
+    type=click.Path(
+        file_okay=False, exists=True, readable=True, path_type=pathlib.Path
+    ),
     help="The directory where the imported files should be read from.",
     default=pathlib.Path("./export"),
 )
 def import_group(ctx: click.Context, data_directory: pathlib.Path):
     ctx.obj.data_directory = data_directory.expanduser()
+
 
 @import_group.command("all")
 @click.pass_obj
@@ -241,21 +256,31 @@ def import_all_command(obj):
     load_pipelines(obj.transforms, data_directory=obj.data_directory)
     load_transforms(obj.transforms, data_directory=obj.data_directory)
 
+
 @import_group.command("saved-objects")
 # TODO add --overwrite flag
 @click.pass_obj
 def import_saved_objects_command(obj):
     load_saved_objects(obj.kibana, data_directory=obj.data_directory)
 
+
+@import_group.command("package-policies")
+@click.pass_obj
+def import_package_policies_command(obj):
+    load_package_policies(obj.kibana, data_directory=obj.data_directory)
+
+
 @import_group.command("pipelines")
 @click.pass_obj
 def import_pipelines_command(obj):
     load_pipelines(obj.elasticsearch, data_directory=obj.data_directory)
 
+
 @import_group.command("enrich-policies")
 @click.pass_obj
 def import_enrich_policies_command(obj):
     load_enrich_policies(obj.elasticsearch, data_directory=obj.data_directory)
+
 
 @import_group.command("transforms")
 @click.pass_obj

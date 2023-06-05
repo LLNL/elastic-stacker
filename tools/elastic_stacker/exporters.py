@@ -71,9 +71,9 @@ def dump_watches(
         with file_path.open("w") as file:
             file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))
 
+
 def dump_enrich_policies(
-        client: ElasticsearchClient,
-        output_directory: Path = Path("./export")
+    client: ElasticsearchClient, output_directory: Path = Path("./export")
 ):
     enrich_policies_directory = output_directory / "enrich_policies"
     enrich_policies_directory.mkdir(exist_ok=True)
@@ -84,6 +84,7 @@ def dump_enrich_policies(
         policy["match"].pop("name")
         with policy_file.open("w") as fh:
             fh.write(json.dumps(policy, sort_keys=True, indent=4))
+
 
 def load_enrich_policies(
     client: ElasticsearchClient,
@@ -96,6 +97,7 @@ def load_enrich_policies(
                 policy = json.load(fh)
             policy_name = policy_file.stem
             client.create_enrich_policy(policy_name, policy)
+
 
 def dump_transforms(
     client: ElasticsearchClient,
@@ -115,7 +117,9 @@ def dump_transforms(
 
     # we also need to know whether a transform was started at the time it was dumped
     stats = {}
-    for transform in client.depaginate(client.transform_stats, "transforms", page_size=100):
+    for transform in client.depaginate(
+        client.transform_stats, "transforms", page_size=100
+    ):
         stats[transform["id"]] = transform
     transform_stats_file = transforms_directory / "_stats.json"
     with transform_stats_file.open("w") as file:
@@ -168,7 +172,12 @@ def load_transforms(
         with stats_file.open("r") as fh:
             reference_stats = json.load(fh)
 
-        current_stats = {t["id"]:t for t in client.depaginate(client.transform_stats, "transforms", page_size=100)}
+        current_stats = {
+            t["id"]: t
+            for t in client.depaginate(
+                client.transform_stats, "transforms", page_size=100
+            )
+        }
 
         for transform_file in transforms_directory.glob("*.json"):
             if transform_file == stats_file:
@@ -183,14 +192,24 @@ def load_transforms(
                 existing_transform = transforms_map[transform_id]
                 for key, loaded_value in loaded_transform.items():
                     if loaded_value != existing_transform[key]:
-                        logger.info("Transform {} differs by key {}, deleting and recreating.".format(transform_id, key))
+                        logger.info(
+                            "Transform {} differs by key {}, deleting and recreating.".format(
+                                transform_id, key
+                            )
+                        )
                         client.stop_transform(transform_id, wait_for_completion=True)
                         client.delete_transform(transform_id)
-                        client.create_transform(transform_id, loaded_transform, defer_validation=True)
+                        client.create_transform(
+                            transform_id, loaded_transform, defer_validation=True
+                        )
                         break
             else:
-                logger.info("Creating new transform with id {}".format(transform_id, key))
-                client.create_transform(transform_id, loaded_transform, defer_validation=True)
+                logger.info(
+                    "Creating new transform with id {}".format(transform_id, key)
+                )
+                client.create_transform(
+                    transform_id, loaded_transform, defer_validation=True
+                )
             # client.set_transform_state(transform_id, target_state=reference_stats[transform_id]["state"])
 
 
@@ -204,6 +223,17 @@ def dump_package_policies(
         file_path = package_policies_directory / filename
         with file_path.open("w") as file:
             file.write(json.dumps(policy, indent=4))
+
+
+def load_package_policies(
+    client: KibanaClient, data_directory: Path = Path("./export")
+):
+    package_policies_directory = data_directory / "package_policies"
+    for policy_file in package_policies_directory.glob("*.json"):
+        with policy_file.open("r") as fh:
+            policy = json.load(fh)
+        policy_id = policy["id"]
+        client.create_package_policy(id=policy_id, policy=policy)
 
 
 def dump_agent_policies(

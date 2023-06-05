@@ -61,10 +61,8 @@ class ElasticsearchClient(httpx.Client):
         transforms_response = self.get(endpoint, params=query_params)
         transforms_response.raise_for_status()
         return transforms_response.json()
-    
-    def transform_stats(
-        self, *args, allow_no_match=True, offset=0, size=100
-    ):
+
+    def transform_stats(self, *args, allow_no_match=True, offset=0, size=100):
         query_params = {
             "allow_no_match": allow_no_match,
             "from": offset,
@@ -107,25 +105,27 @@ class ElasticsearchClient(httpx.Client):
         allowed_states = started_states.union(stopped_states)
 
         if target_state not in allowed_states:
-            err_msg = "{} is not a valid state for transforms; acceptable values are {}.".format(target_state, allowed_states)
+            err_msg = "{} is not a valid state for transforms; acceptable values are {}.".format(
+                target_state, allowed_states
+            )
             logger.error(err_msg)
             # TODO: this should be some more specific subclass of Exception
             raise Exception(err_msg)
 
         current_stats = self.transform_stats(id)
         current_state = current_stats["transforms"][0]["state"]
-        
+
         if target_state in started_states:
             if current_state in started_states:
                 logger.debug("transform {} is already started".format(id))
             else:
                 self.start_transform(id, timeout=timeout)
-        else: # target_state in stopped_states
+        else:  # target_state in stopped_states
             if current_state in stopped_states:
                 logger.debug("transform {} is already stopped".format(id))
             else:
                 self.stop_transform(id, timeout=timeout)
-   
+
     def start_transform(
         self,
         id: str,
@@ -133,17 +133,14 @@ class ElasticsearchClient(httpx.Client):
         timeout: str = None,
     ):
         endpoint = "_transform/{}/_start".format(id)
-        query_params = {
-            "from": from_time,
-            "timeout": timeout
-        }
+        query_params = {"from": from_time, "timeout": timeout}
         query_params = {k: v for k, v in query_params.items() if v is not None}
 
         response = self.post(endpoint, params=query_params)
         logger.debug(response.json())
         response.raise_for_status()
         return response.json()
-    
+
     def stop_transform(
         self,
         id: str,
@@ -155,11 +152,11 @@ class ElasticsearchClient(httpx.Client):
     ):
         endpoint = "_transform/{}/_stop".format(id)
         query_params = {
-            "force":force,
-            "allow_no_match":allow_no_match,
-            "wait_for_checkpoint":wait_for_checkpoint,
-            "wait_for_completion":wait_for_completion,
-            "timeout":timeout
+            "force": force,
+            "allow_no_match": allow_no_match,
+            "wait_for_checkpoint": wait_for_checkpoint,
+            "wait_for_completion": wait_for_completion,
+            "timeout": timeout,
         }
         query_params = {k: v for k, v in query_params.items() if v is not None}
 
@@ -167,7 +164,7 @@ class ElasticsearchClient(httpx.Client):
         logger.debug(response.json())
         response.raise_for_status()
         return response.json()
-    
+
     def delete_transform(
         self,
         id: str,
@@ -208,13 +205,21 @@ class ElasticsearchClient(httpx.Client):
         response = self.get(endpoint)
         response.raise_for_status()
         return response.json()
-    
-    def create_enrich_policy(self, name: str, policy:dict):
+
+    def create_enrich_policy(self, name: str, policy: dict):
         endpoint = "_enrich/policy/{}".format(name)
         response = self.put(endpoint, json=policy)
-        logger.debug(response.json())
-        # response.raise_for_status()
-        return response.json()
+        response_data = response.json()
+        if "error" in response_data:
+            if response_data["error"]["type"] == "resource_already_exists_exception":
+                # Elasticsearch won't let you modify enrich policies after creation,
+                # and the process for replacing an old one with a new one is a massive pain in the neck
+                # so changing existing policies is not supported in version 1, but the user
+                # should be warned that the policy hasn't been changed.
+                logger.warn(response_data["reason"])
+        logger.debug(response_data)
+        response.raise_for_status()
+        return response_data
 
     def query_watches(
         self,
@@ -329,9 +334,16 @@ class KibanaClient(httpx.Client):
         if id is not None:
             endpoint = urllib.parse.urljoin(endpoint, id)
 
-        package_policies_response = self.get("/api/fleet/package_policies")
+        package_policies_response = self.get(endpoint)
         package_policies_response.raise_for_status()
         return package_policies_response.json()
+
+    def create_package_policy(self, id: str, policy: dict):
+        endpoint = "/api/fleet/package_policies/{}".format(id)
+        response = self.put(endpoint, json=policy)
+        logger.debug(response.json())
+        response.raise_for_status()
+        return response.json()
 
     def import_saved_objects(
         self,
