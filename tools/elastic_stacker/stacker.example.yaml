@@ -1,12 +1,17 @@
 # these values will be used if no client is specified
 # if you only have one Elastic stack, put it here
-[default.stack]
-verify = "/etc/pki/tls/cert.pem"
+default:
+  client:
+    verify: /etc/pki/tls/cert.pem
 
-# if you're working with several Elastic stacks,
-# you can select the stack you want to use
-# with the option `-s <client_name>`"
-[stack.pre]
-kibana        = { base_url      = "https://lc-kibana-pre.llnl.gov"}
-elasticsearch = { base_url      = "https://lc-elastic-hot-1-pre.llnl.gov"}
-headers       = { Authorization = "Apikey <REDACTED>" }
+# you can select the configuration profile you want to use
+# with the option `-p <client_name>`"
+profiles:
+  pre:
+    kibana:
+      base_url: https://lc-kibana-pre.llnl.gov
+    elasticsearch:
+      base_url: https://lc-elastic-hot-1-pre.llnl.gov
+    client:
+      headers:
+        Authorization: "Apikey <REDACTED>"
