@@ -9,7 +9,7 @@ tomli = "*"
 marshmallow = "*"
 python-slugify = "*"
 dotwiz = "*"
-click = "*"
+fire = "*"
 
 [dev-packages]
 black = "*"
