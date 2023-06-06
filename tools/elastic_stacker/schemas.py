@@ -18,14 +18,20 @@ from marshmallow import (
 from api_clients import KibanaClient, ElasticsearchClient
 
 # TODO: debug logging for the schema loader
-logger = logging.getLogger("kibanaio")
+logger = logging.getLogger("elastic_stacker")
 
-GLOBAL_DEFAULTS = {
+GLOBAL_DEFAULT_PROFILE = {
     "elasticsearch": {"base_url": "https://localhost:9200"},
     "kibana": {"base_url": "https://localhost:5601"},
+    "load": {"include_managed": False},
+    "dump": {
+        "temp_copy": False,
+        "delete_after_import": False,
+        "allow_failure": False,
+        "retries": 0
+    },
+    "data_directory": "./stacker_dump"
 }
-
-USER_DEFAULTS = {}
 
 
 class PathField(fields.Field):
@@ -91,7 +97,7 @@ class APIClientConfigSchema(Schema):
     tls = fields.Nested(TLSConfigSchema())
 
     @post_load
-    def fill_defaults_and_correct_names(self, client_settings, **kwargs):
+    def fix_tls(self, client_settings, **kwargs):
         # httpx `cert` argument is a tuple of (cert, key) and TOML doesn't have tuples
         # so it got a nested table instead
         if "tls" in client_settings:
@@ -104,79 +110,26 @@ class APIClientConfigSchema(Schema):
             del client_settings["tls"]
         return client_settings
 
+class ConfigSchema(Schema):
+    client = fields.Nested(APIClientConfigSchema)
+    data_directory = PathField(validate=PathValidator(file_ok=False))
 
-class KibanaClientSchema(APIClientConfigSchema):
-    @post_load
-    def make_client(self, data, **kwargs):
-        return KibanaClient(**data)
+class DumperConfigSchema(ConfigSchema):
+    include_managed = fields.Boolean()
 
+class LoaderConfigSchema(ConfigSchema):
+    temp_copy = fields.Boolean()
+    delete_after_import = fields.Boolean()
+    allow_failure = fields.Boolean()
+    retries = fields.Integer()
 
-class ElasticsearchClientSchema(APIClientConfigSchema):
-    @post_load
-    def make_client(self, data, **kwargs):
-        return ElasticsearchClient(**data)
-
-
-class ProfileConfigSchema(APIClientConfigSchema):
+class ProfileSchema(ConfigSchema):
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
-
-    @pre_load
-    def load_defaults(self, data, **kwargs):
-        """
-        All this shuffling and updating is to apply the following hierarchy of defaults:
-        - client-specific (e.g. stack.pre.kibana.base_url = "https://foo.bar")
-        - stack-specific (e.g. stack.pre.headers = {Authorization: "BazQux=="})
-        - config defaults (e.g. default.stack.ca = "./ca.crt")
-        - hardcoded global defaults from the top of this file
-        """
-        final_data = GLOBAL_DEFAULTS
-        stack_defaults = dict(data)
-        if "elasticsearch" in stack_defaults:
-            del stack_defaults["elasticsearch"]
-        if "kibana" in stack_defaults:
-            del stack_defaults["kibana"]
-
-        for client_type in ["elasticsearch", "kibana"]:
-            final_data[client_type] = GLOBAL_DEFAULTS[client_type]
-            final_data[client_type].update(USER_DEFAULTS.get(client_type, {}))
-            final_data[client_type].update(stack_defaults)
-            final_data[client_type].update(data.get(client_type, {}))
-
-        return final_data
+    load = fields.Nested(LoaderConfigSchema)
+    dump = fields.Nested(LoaderConfigSchema)
 
 
-class ProfileSchema(ProfileConfigSchema):
-    @post_load
-    def make_clients(self, data, **kwargs):
-        data["kibana"] = KibanaClient(**data["kibana"])
-        data["elasticsearch"] = ElasticsearchClient(**data["elasticsearch"])
-        return data
-
-
-class DefaultsConfigSchema(Schema):
-    profile = fields.Nested(ProfileConfigSchema())
-
-
-class ConfigSchema(Schema):
-    default = fields.Nested(DefaultsConfigSchema())
+class ConfigFileSchema(Schema):
+    default = fields.Nested(ProfileSchema())
     profile = fields.Mapping(fields.String(), fields.Nested(ProfileSchema()))
-
-    @pre_load
-    def populate_defaults(self, data, **kwargs):
-        global USER_DEFAULTS
-        USER_DEFAULTS = DefaultsConfigSchema().load(data.get("default", {}))
-        return data
-
-    @post_load
-    def make_dotwiz(self, data, **kwargs):
-        # marshmallow schemas load to a dict by default,
-        # but when deeply nested, the stacks of brackets and quotes looks pretty cluttered
-        # after all, who wants thing["foo"]["bar"]["baz"]
-        # or worse, because you may not know whether any given key was provided in the config
-        # you get thing.get(foo, {}).get(bar, {}).get(baz, None) which is atrocious
-        #
-        # DotWiz is like a Namespace meets a default dict,
-        # so you can access thing.foo.bar.baz and if any of the intermediate values are missing
-        # it'll just return None. Much nicer for big nested documents like this.
-        return dotwiz.DotWiz(data)
