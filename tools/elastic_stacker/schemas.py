@@ -80,8 +80,8 @@ class BasicAuthSchema(Schema):
     password = fields.String(required=True)
 
     @post_load
-    def make_auth(self, data, **kwargs):
-        return httpx.BasicAuth(**data)
+    def make_auth_tuple(self, data, **kwargs):
+        return (data["username"], data["password"])
 
 
 class TLSConfigSchema(Schema):
