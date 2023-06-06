@@ -110,20 +110,20 @@ class APIClientConfigSchema(Schema):
             del client_settings["tls"]
         return client_settings
 
-class ConfigSchema(Schema):
-    client = fields.Nested(APIClientConfigSchema)
+class DumperConfigSchema(Schema):
+    include_managed = fields.Boolean()
     data_directory = PathField(validate=PathValidator(file_ok=False))
 
-class DumperConfigSchema(ConfigSchema):
-    include_managed = fields.Boolean()
-
-class LoaderConfigSchema(ConfigSchema):
+class LoaderConfigSchema(Schema):
+    data_directory = PathField(validate=PathValidator(file_ok=False, should_exist=True))
     temp_copy = fields.Boolean()
     delete_after_import = fields.Boolean()
     allow_failure = fields.Boolean()
     retries = fields.Integer()
 
-class ProfileSchema(ConfigSchema):
+class ProfileSchema(Schema):
+    data_directory = PathField(validate=PathValidator(file_ok=False))
+    client = fields.Nested(APIClientConfigSchema)
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
     load = fields.Nested(LoaderConfigSchema)
