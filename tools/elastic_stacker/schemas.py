@@ -127,7 +127,7 @@ class ProfileSchema(Schema):
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
     load = fields.Nested(LoaderConfigSchema)
-    dump = fields.Nested(LoaderConfigSchema)
+    dump = fields.Nested(DumperConfigSchema)
 
 
 class ConfigFileSchema(Schema):
