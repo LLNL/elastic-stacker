@@ -4,6 +4,8 @@ import os
 import sys
 import logging
 import pathlib
+import shutil
+import tempfile
 
 import click
 import tomli
@@ -245,8 +247,53 @@ def export_enrich_policies_command(obj):
     help="The directory where the imported files should be read from.",
     default=pathlib.Path("./export"),
 )
-def import_group(ctx: click.Context, data_directory: pathlib.Path):
-    ctx.obj.data_directory = data_directory.expanduser()
+@click.option(
+    "-t",
+    "--temp-copy",
+    is_flag=True,
+    help="Make a temporary copy of the imported data (useful with -D)",
+)
+@click.option(
+    "-r",
+    "--retries",
+    type=int,
+    help="How many times to retry importing data before failing (by default, aborts immediately on error)",
+)
+@click.option(
+    "-D",
+    "--delete-after-import",
+    is_flag=True,
+    help="Delete each file after successfully importing (use with -t or your export files will be deleted)",
+)
+@click.option(
+    "-S",
+    "--stubborn",
+    is_flag=True,
+    help="Equivalent to -tDr5 (make a temporary copy to operate on, delete files after successful import, retry five times.)",
+)
+def import_group(
+    ctx: click.Context,
+    data_directory: pathlib.Path,
+    temp_copy: bool,
+    retries: int,
+    delete_after_import: bool,
+    stubborn: bool,
+):
+
+    if stubborn:
+        temp_copy = True
+        delete_after_import = True
+        retries = 5
+
+    data_directory = data_directory.expanduser()
+    if temp_copy:
+        tmp_data_directory = pathlib.Path(tempfile.mkdtemp(prefix="stacker_"))
+        shutil.copy(data_directory, tmp_data_directory)
+        data_directory = tmp_data_directory
+
+    ctx.obj.data_directory = data_directory
+    ctx.obj.retries = retries
+    ctx.obj.delete_after_import = delete_after_import
 
 
 @import_group.command("all")

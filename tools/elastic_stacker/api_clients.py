@@ -14,6 +14,20 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class ElasticsearchClient(httpx.Client):
+    def _log_if_error(response: httpx.Response):
+        if not response.is_success:
+            try:
+                reason = response.json()
+            except Exception as e2:
+                reason = "{} {}".format(response.status_code, response.reason_phrase)
+            logger.error(
+                "Request to {method} {url} failed: {reason}".format(
+                    method=response.request.method,
+                    url=response.request.url,
+                    reason=reason,
+                )
+            )
+
     def pipelines(self, id=None, master_timeout="30s"):
 
         query_params = {"master_timeout": master_timeout} if master_timeout else {}
