@@ -83,7 +83,6 @@ class SavedObjectController(GenericKibanaController):
         overwrite: bool = None,
         compatibility_mode: bool = None,
     ):
-
         if space_id is not None:
             endpoint = "/s/{}/api/saved_objects/_import".format(space_id)
         else:
