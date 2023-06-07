@@ -173,4 +173,4 @@ class SavedObjectController(GenericKibanaController):
                     output_directory / "saved_objects" / obj["type"] / file_name
                 )
                 with output_file.open("w") as fh:
-                    json.dump(obj, fh, indent=4)
+                    json.dump(obj, fh, indent=4, sort_keys=True)

@@ -54,7 +54,7 @@ class PipelineController(GenericElasticsearchController):
             if include_managed or not pipeline.get("_meta", {}).get("managed"):
                 file_path = pipelines_directory / (name + ".json")
                 with file_path.open("w") as file:
-                    file.write(json.dumps(pipeline, indent=4))
+                    file.write(json.dumps(pipeline, indent=4, sort_keys=True))
 
     def load(self, data_directory: pathlib.Path, delete_after_import: bool = False):
         pipelines_directory = data_directory / self.resource_directory
