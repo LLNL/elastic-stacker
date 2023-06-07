@@ -46,7 +46,7 @@ class EnrichPolicyController(GenericElasticsearchController):
             with policy_file.open("w") as fh:
                 fh.write(json.dumps(policy, sort_keys=True, indent=4))
 
-    def load_enrich_policies(
+    def load(
         self,
         data_directory: pathlib.Path,
         allow_failure: bool = False,
