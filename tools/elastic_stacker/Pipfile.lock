@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "df2033c61e0f5e8cc2ed1828a353d95a73326ce1d924c25a41f3bbe9d4679f25"
+            "sha256": "a475e7d84dbf0c37721c66b37a27706c83500a8b464409d1ca95c9fb6f6c7591"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -164,14 +164,6 @@
                 "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"
             ],
             "version": "==1.3"
-        },
-        "tomli": {
-            "hashes": [
-                "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
-                "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"
-            ],
-            "index": "pip_conf_index_global",
-            "version": "==2.0.1"
         }
     },
     "develop": {
@@ -372,7 +364,7 @@
                 "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
                 "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"
             ],
-            "index": "pip_conf_index_global",
+            "markers": "python_version < '3.11'",
             "version": "==2.0.1"
         },
         "traitlets": {

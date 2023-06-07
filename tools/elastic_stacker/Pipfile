@@ -5,7 +5,6 @@ name = "pip_conf_index_global"
 
 [packages]
 httpx = "*"
-tomli = "*"
 marshmallow = "*"
 python-slugify = "*"
 dotwiz = "*"
