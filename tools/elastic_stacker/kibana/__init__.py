@@ -1,10 +1,12 @@
+import logging
+
 import httpx
 
-class KibanaClient(httpx.Client):
-    def __init__(self, *args, **kwargs):
-        if "headers" in kwargs:
-            kwargs["headers"].update({"kbn-xsrf": "true"})
-        else:
-            kwargs["headers"] = {"kbn-xsrf": "true"}
+from .generic import GenericKibanaController
 
-        super().__init__(*args, **kwargs)
+logger = logging.getLogger("elastic_stacker")
+
+
+class KibanaController(GenericKibanaController):
+    def __init__(self, client: httpx.Client):
+        super().__init__(client)
