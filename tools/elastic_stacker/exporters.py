@@ -113,21 +113,6 @@ def dump_transforms(
         file.write(json.dumps(stats, indent=4, sort_keys=True))
 
 
-def dump_pipelines(
-    client: ElasticsearchClient,
-    output_directory: Path = Path("./export"),
-    include_managed: bool = False,
-):
-    pipelines_directory = output_directory / "pipelines"
-    pipelines_directory.mkdir(exist_ok=True)
-    for name, pipeline in client.pipelines().items():
-        logger.debug(pipeline)
-        if include_managed or not pipeline.get("_meta", {}).get("managed"):
-            file_path = pipelines_directory / (name + ".json")
-            with file_path.open("w") as file:
-                file.write(json.dumps(pipeline, indent=4))
-
-
 def dump_agent_policies(
     client: KibanaClient,
     output_directory: Path = Path("./export"),
@@ -168,21 +153,6 @@ def load_enrich_policies(
                 policy = json.load(fh)
             policy_name = policy_file.stem
             client.create_enrich_policy(policy_name, policy)
-
-
-def load_pipelines(
-    client: ElasticsearchClient,
-    data_directory: Path = Path("./export"),
-    delete_after_import: bool = False,
-    allow_failure: bool = False,
-):
-    pipelines_directory = data_directory / "pipelines"
-    if pipelines_directory.is_dir():
-        for pipeline_file in pipelines_directory.glob("*.json"):
-            with pipeline_file.open("r") as fh:
-                pipeline = json.load(fh)
-            pipeline_id = pipeline_file.stem
-            client.create_pipeline(pipeline_id, pipeline)
 
 
 def load_transforms(

@@ -28,39 +28,6 @@ class ElasticsearchClient(httpx.Client):
                 )
             )
 
-    def pipelines(self, id=None, master_timeout="30s"):
-
-        query_params = {"master_timeout": master_timeout} if master_timeout else {}
-        endpoint = (
-            urllib.parse.urljoin("_ingest/pipeline/", id) if id else "_ingest/pipeline"
-        )
-
-        pipelines_response = self.get(endpoint, params=query_params)
-        pipelines_response.raise_for_status()
-        return pipelines_response.json()
-
-    def create_pipeline(
-        self,
-        id: str,
-        pipeline: dict,
-        if_version: int = None,
-        master_timeout: str = None,
-        timeout: str = None,
-    ):
-        endpoint = urllib.parse.urljoin("_ingest/pipeline/", id)
-        query_params = {}
-        if if_version is not None:
-            query_params["if_version"] = if_version
-        if master_timeout is not None:
-            query_params["master_timeout"] = master_timeout
-        if timeout is not None:
-            query_params["timeout"] = timeout
-
-        response = self.put(endpoint, json=pipeline, params=query_params)
-        logger.debug(response.json())
-        response.raise_for_status()
-        return response.json()
-
     def transforms(
         self, *args, allow_no_match=True, exclude_generated=False, offset=0, size=100
     ):
@@ -268,15 +235,14 @@ class ElasticsearchClient(httpx.Client):
                 offset += 1
                 yield result
 
+    class KibanaClient(httpx.Client):
+        def __init__(self, *args, **kwargs):
+            if "headers" in kwargs:
+                kwargs["headers"].update({"kbn-xsrf": "true"})
+            else:
+                kwargs["headers"] = {"kbn-xsrf": "true"}
 
-class KibanaClient(httpx.Client):
-    def __init__(self, *args, **kwargs):
-        if "headers" in kwargs:
-            kwargs["headers"].update({"kbn-xsrf": "true"})
-        else:
-            kwargs["headers"] = {"kbn-xsrf": "true"}
-
-        super().__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
 
     def status(self):
         status_response = self.get("/api/status")
