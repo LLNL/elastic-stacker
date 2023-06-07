@@ -279,7 +279,6 @@ def import_group(
     delete_after_import: bool,
     stubborn: bool,
 ):
-
     if stubborn:
         temp_copy = True
         delete_after_import = True
