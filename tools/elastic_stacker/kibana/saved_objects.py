@@ -32,7 +32,7 @@ class SavedObjectController(GenericKibanaController):
         space_id: str = None,
         include_references_deep: bool = None,
         exclude_export_details: bool = None,
-        stream: bool = False
+        stream: bool = False,
     ):
         # TODO: maybe throw a nice friendly exception instead of an AssertionError?
         assert (
@@ -142,11 +142,7 @@ class SavedObjectController(GenericKibanaController):
                 create_new_copies=(not overwrite),
             )
 
-    def dump(
-        self,
-        output_directory: pathlib.Path,
-        types: typing.Iterable = None
-    ):
+    def dump(self, output_directory: pathlib.Path, types: typing.Iterable = None):
         known_types = {t["name"] for t in self.types()["types"]}
 
         types = set(types) if types is not None else known_types
@@ -160,7 +156,9 @@ class SavedObjectController(GenericKibanaController):
             obj_type_output_dir = output_directory / "saved_objects" / obj_type
             obj_type_output_dir.mkdir(parents=True, exist_ok=True)
 
-        with self.export_stream(types=types, exclude_export_details=True, stream=True) as export_stream:
+        with self.export_stream(
+            types=types, exclude_export_details=True, stream=True
+        ) as export_stream:
             for line in export_stream.iter_lines():
                 # some things have a "title" and others have a "name", and others have only have an id
                 # in order to get a meaningful filename for version control, we have to pick a different field for each.
