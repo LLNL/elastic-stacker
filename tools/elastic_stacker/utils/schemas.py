@@ -15,23 +15,21 @@ from marshmallow import (
     ValidationError,
 )
 
-from api_clients import KibanaClient, ElasticsearchClient
-
 # TODO: debug logging for the schema loader
 logger = logging.getLogger("elastic_stacker")
 
-GLOBAL_DEFAULT_PROFILE = {
-    "elasticsearch": {"base_url": "https://localhost:9200"},
-    "kibana": {"base_url": "https://localhost:5601"},
-    "load": {"include_managed": False},
-    "dump": {
-        "temp_copy": False,
-        "delete_after_import": False,
-        "allow_failure": False,
-        "retries": 0,
-    },
-    "data_directory": "./stacker_dump",
-}
+
+class BaseSchema(Schema):
+    @pre_load
+    def clear_none_values(self, data, **kwargs):
+        # none values in the data interfere with the precedence of defaults.
+        to_pop = []
+        for k, v in data.items():
+            if v is None:
+                to_pop.append(k)
+        for k in to_pop:
+            data.pop(k)
+        return data
 
 
 class PathField(fields.Field):
@@ -43,8 +41,15 @@ class PathField(fields.Field):
 
 
 class PathValidator(validate.Validator):
-    def __init__(self, should_exist=True, file_ok=True, dir_ok=True) -> None:
-        self.should_exist = should_exist
+    def __init__(
+        self,
+        exist_ok: bool = True,
+        must_exist: bool = False,
+        file_ok: bool = True,
+        dir_ok: bool = True,
+    ) -> None:
+        self.must_exist = must_exist
+        self.exist_ok = exist_ok
         self.file_ok = file_ok
         self.dir_ok = dir_ok
 
@@ -54,28 +59,18 @@ class PathValidator(validate.Validator):
         is_dir = os.path.isdir(path)
         exists = is_file or is_dir
 
-        if exists ^ self.should_exist:
-            raise ValidationError(
-                "path should {maybe_not}exist".format(
-                    maybe_not="" if self.should_exist else "not "
-                )
-            )
-        if is_file ^ self.file_ok:
-            raise ValidationError(
-                "path should {maybe_not}be a file".format(
-                    maybe_not="" if self.file_ok else "not "
-                )
-            )
-        if is_dir ^ self.dir_ok:
-            raise ValidationError(
-                "path should {maybe_not}be a directory".format(
-                    maybe_not="" if self.dir_ok else "not "
-                )
-            )
+        if exists and not self.exist_ok:
+            raise ValidationError("path should not exist")
+        if self.must_exist and not exists:
+            raise ValidationError("path must exist")
+        if is_file and not self.file_ok:
+            raise ValidationError("path should not be a file")
+        if is_dir and not self.dir_ok:
+            raise ValidationError("path should not be a directory")
         return value
 
 
-class BasicAuthSchema(Schema):
+class BasicAuthSchema(BaseSchema):
     username = fields.String(required=True)
     password = fields.String(required=True)
 
@@ -84,15 +79,15 @@ class BasicAuthSchema(Schema):
         return (data["username"], data["password"])
 
 
-class TLSConfigSchema(Schema):
+class TLSConfigSchema(BaseSchema):
     cert = PathField(validate=PathValidator(dir_ok=False))
     key = PathField(validate=PathValidator(dir_ok=False))
 
 
-class APIClientConfigSchema(Schema):
+class APIClientConfigSchema(BaseSchema):
     base_url = fields.Url()
     headers = fields.Dict(keys=fields.String(), values=fields.String())
-    verify = PathField(validate=PathValidator(dir_ok=False, should_exist=True))
+    verify = PathField(validate=PathValidator(dir_ok=False, must_exist=True))
     auth = fields.Nested(BasicAuthSchema())
     tls = fields.Nested(TLSConfigSchema())
 
@@ -111,28 +106,33 @@ class APIClientConfigSchema(Schema):
         return client_settings
 
 
-class DumperConfigSchema(Schema):
-    include_managed = fields.Boolean()
+# for config values shared between load and dump
+# TODO: come up for a better name for this thing
+class IOConfigSchema(BaseSchema):
     data_directory = PathField(validate=PathValidator(file_ok=False))
 
 
-class LoaderConfigSchema(Schema):
-    data_directory = PathField(validate=PathValidator(file_ok=False, should_exist=True))
+class DumperConfigSchema(IOConfigSchema):
+    include_managed = fields.Boolean()
+
+
+class LoaderConfigSchema(IOConfigSchema):
+    data_directory = PathField(validate=PathValidator(file_ok=False))
     temp_copy = fields.Boolean()
     delete_after_import = fields.Boolean()
     allow_failure = fields.Boolean()
     retries = fields.Integer()
 
 
-class ProfileSchema(Schema):
-    data_directory = PathField(validate=PathValidator(file_ok=False))
+class ProfileSchema(BaseSchema):
     client = fields.Nested(APIClientConfigSchema)
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
     load = fields.Nested(LoaderConfigSchema)
     dump = fields.Nested(DumperConfigSchema)
+    io = fields.Nested(IOConfigSchema)
 
 
-class ConfigFileSchema(Schema):
+class ConfigFileSchema(BaseSchema):
     default = fields.Nested(ProfileSchema())
-    profile = fields.Mapping(fields.String(), fields.Nested(ProfileSchema()))
+    profiles = fields.Mapping(fields.String(), fields.Nested(ProfileSchema()))
