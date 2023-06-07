@@ -219,7 +219,7 @@ class TransformController(GenericElasticsearchController):
                     )
                     self.create(transform_id, loaded_transform, defer_validation=True)
 
-    def dump_transforms(
+    def dump(
         self,
         output_directory: pathlib.Path,
         include_managed: bool = False,
