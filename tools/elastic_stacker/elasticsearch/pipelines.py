@@ -11,17 +11,17 @@ class PipelineController(GenericElasticsearchController):
     base_endpoint = "_ingest/pipeline"
     resource_directory = "pipelines"
 
-    def _build_endpoint(self, id: str):
+    def _build_endpoint(self, id: str) -> str:
         endpoint = (
             self.base_endpoint if id is None else "{}/{}".format(self.base_endpoint, id)
         )
         return endpoint
 
-    def get(self, id: str = None, master_timeout: str = None):
+    def get(self, id: str = None, master_timeout: str = None) -> dict:
         endpoint = self._build_endpoint(id)
         query_params = {"master_timeout": master_timeout} if master_timeout else {}
-        pipelines_response = self.client.get(endpoint, params=query_params)
-        return pipelines_response.json()
+        response = self.client.get(endpoint, params=self._clean_params(query_params))
+        return response.json()
 
     def create(
         self,
@@ -39,7 +39,7 @@ class PipelineController(GenericElasticsearchController):
             "timeout": timeout,
         }
 
-        response = self.client.put(endpoint, json=pipeline, params=self._clean_headers(query_params))
+        response = self.client.put(endpoint, json=pipeline, params=self._clean_params(query_params))
         return response.json()
 
     def dump(
@@ -50,7 +50,12 @@ class PipelineController(GenericElasticsearchController):
         pipelines_directory = data_directory / self.resource_directory
         pipelines_directory.mkdir(exist_ok=True)
 
-        for name, pipeline in self.get().items():
+        pipelines = self.get()
+
+        # if run with "allow_failure" client argument, may cause bad behavior
+        assert "error" not in pipelines and "root_cause" not in pipelines.get("error")
+
+        for name, pipeline in pipelines.items():
             if include_managed or not pipeline.get("_meta", {}).get("managed"):
                 file_path = pipelines_directory / (name + ".json")
                 with file_path.open("w") as file:
@@ -67,4 +72,4 @@ class PipelineController(GenericElasticsearchController):
                 with pipeline_file.open("r") as fh:
                     pipeline = json.load(fh)
                 pipeline_id = pipeline_file.stem
-                self.client.create_pipeline(pipeline_id, pipeline)
+                self.create(pipeline_id, pipeline)
