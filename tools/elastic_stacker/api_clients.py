@@ -45,29 +45,6 @@ class ElasticsearchClient(httpx.Client):
 
             super().__init__(*args, **kwargs)
 
-    def agent_policies(
-        self,
-        perPage: int = 20,
-        page: int = 1,
-        kuery: str = None,
-        full: bool = False,
-        noAgentCount: bool = False,
-    ):
-        query_params = {
-            "perPage": perPage,
-            "page": page,
-            "full": full,
-            # "noAgentCount": noAgentCount
-        }
-        if kuery is not None:
-            query_params["kuery"] = kuery
-        agent_policies_response = self.get(
-            "/api/fleet/agent_policies", params=query_params
-        )
-        logger.debug(agent_policies_response.content)
-        agent_policies_response.raise_for_status()
-        return agent_policies_response.json()
-
     def package_policies(self, id: str = None):
         endpoint = "/api/fleet/package_policies"
         if id is not None:

@@ -21,19 +21,6 @@ def dump_enrich_policies(
             fh.write(json.dumps(policy, sort_keys=True, indent=4))
 
 
-def dump_agent_policies(
-    client: KibanaClient,
-    output_directory: Path = Path("./export"),
-    include_managed: bool = False,
-):
-    agent_policies_directory = output_directory / "agent_policies"
-    agent_policies_directory.mkdir(exist_ok=True)
-    for policy in client.depaginate(client.agent_policies):
-        if include_managed or not policy["is_managed"]:
-            filename = slugify(policy["name"]) + ".json"
-            file_path = agent_policies_directory / filename
-            with file_path.open("w") as file:
-                file.write(json.dumps(policy, indent=4))
 
 
 def dump_package_policies(
