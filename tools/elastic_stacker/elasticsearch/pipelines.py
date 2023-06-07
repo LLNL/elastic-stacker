@@ -39,14 +39,12 @@ class PipelineController(GenericElasticsearchController):
             "timeout": timeout,
         }
 
-        response = self.client.put(endpoint, json=pipeline, params=self._clean_params(query_params))
+        response = self.client.put(
+            endpoint, json=pipeline, params=self._clean_params(query_params)
+        )
         return response.json()
 
-    def dump(
-        self,
-        data_directory: pathlib.Path,
-        include_managed: bool = False
-    ):
+    def dump(self, data_directory: pathlib.Path, include_managed: bool = False):
         pipelines_directory = data_directory / self.resource_directory
         pipelines_directory.mkdir(exist_ok=True)
 
@@ -61,11 +59,7 @@ class PipelineController(GenericElasticsearchController):
                 with file_path.open("w") as file:
                     file.write(json.dumps(pipeline, indent=4))
 
-    def load(
-        self,
-        data_directory: pathlib.Path,
-        delete_after_import: bool = False
-    ):
+    def load(self, data_directory: pathlib.Path, delete_after_import: bool = False):
         pipelines_directory = data_directory / self.resource_directory
         if pipelines_directory.is_dir():
             for pipeline_file in pipelines_directory.glob("*.json"):
