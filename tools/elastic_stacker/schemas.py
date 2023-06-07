@@ -28,9 +28,9 @@ GLOBAL_DEFAULT_PROFILE = {
         "temp_copy": False,
         "delete_after_import": False,
         "allow_failure": False,
-        "retries": 0
+        "retries": 0,
     },
-    "data_directory": "./stacker_dump"
+    "data_directory": "./stacker_dump",
 }
 
 
@@ -110,9 +110,11 @@ class APIClientConfigSchema(Schema):
             del client_settings["tls"]
         return client_settings
 
+
 class DumperConfigSchema(Schema):
     include_managed = fields.Boolean()
     data_directory = PathField(validate=PathValidator(file_ok=False))
+
 
 class LoaderConfigSchema(Schema):
     data_directory = PathField(validate=PathValidator(file_ok=False, should_exist=True))
@@ -120,6 +122,7 @@ class LoaderConfigSchema(Schema):
     delete_after_import = fields.Boolean()
     allow_failure = fields.Boolean()
     retries = fields.Integer()
+
 
 class ProfileSchema(Schema):
     data_directory = PathField(validate=PathValidator(file_ok=False))
