@@ -99,14 +99,6 @@ class ElasticsearchClient(httpx.Client):
         spaces_response.raise_for_status()
         return spaces_response.json()
 
-    def allowed_types(self):
-        types_response = self.get(
-            # this isn't documented anywhere, and starts with an underscore, so it might break without warning
-            "/api/kibana/management/saved_objects/_allowed_types"
-        )
-        types_response.raise_for_status()
-        return types_response.json()
-
     def agent_policies(
         self,
         perPage: int = 20,
@@ -145,84 +137,3 @@ class ElasticsearchClient(httpx.Client):
         logger.debug(response.json())
         response.raise_for_status()
         return response.json()
-
-    def import_saved_objects(
-        self,
-        file: typing.BinaryIO,
-        space_id: str = None,
-        create_new_copies: bool = None,
-        overwrite: bool = None,
-        compatibility_mode: bool = None,
-    ):
-
-        base_endpoint = "saved_objects/_import"
-        prefix = (
-            "api/" if space_id is None else urllib.parse.urljoin("s/", space_id) + "/"
-        )
-        endpoint = urllib.parse.urljoin(prefix, base_endpoint)
-
-        query_params = {}
-        if create_new_copies:
-            query_params["createNewCopies"] = create_new_copies
-        if overwrite:
-            query_params["overwrite"] = overwrite
-        if compatibility_mode:
-            query_params["compatibilityMode"] = compatibility_mode
-
-        # temporary files get unhelpful or blank names, and Kibana expects specific file extensions on the name
-        # so we'll pretend whatever stream we're fed comes from an ndjson file.
-        if not file.name:
-            upload_filename = "export.ndjson"
-        elif not file.name.endswith(".ndjson"):
-            upload_filename += ".ndjson"
-        else:
-            upload_filename = file.name
-
-        files = {"file": (upload_filename, file, "application/ndjson")}
-
-        response = self.post(endpoint, params=query_params, files=files)
-        logger.debug(response.content)
-        response.raise_for_status()
-        return response.json()
-
-    def export_saved_objects(
-        self,
-        types: Iterable = [],
-        objects: Iterable = [],
-        space_id: str = None,
-        include_references_deep: bool = False,
-        exclude_export_details: bool = False,
-        parse=False,
-    ):
-        # TODO: maybe throw a nice friendly exception instead of an AssertionError?
-        assert (
-            types or objects
-        ), """
-        You must specify either a list of types or objects to export in the request body.
-        see https://www.elastic.co/guide/en/kibana/master/saved-objects-api-export.html for details.
-        """
-
-        if space_id is not None:
-            endpoint = "/s/%s/api/saved_objects/_export" % space_id
-        else:
-            endpoint = "/api/saved_objects/_export"
-
-        post_body = {
-            "includeReferencesDeep": include_references_deep,
-            "excludeExportDetails": exclude_export_details,
-        }
-
-        if types:
-            post_body.update({"type": list(types)})
-        if objects:
-            post_body.update({"objects": list(objects)})
-
-        logger.debug(
-            "Sending request to {baseurl}/{endpoint} with post body {body}".format(
-                baseurl=self._base_url, endpoint=endpoint, body=json.dumps(post_body)
-            )
-        )
-        export_response = self.post(endpoint, json=post_body)
-        response_content = export_response.content.decode("utf-8")
-        export_response.raise_for_status()
-        return response_content

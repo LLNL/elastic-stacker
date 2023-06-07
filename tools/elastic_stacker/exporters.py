@@ -1,63 +1,10 @@
-import os
 import json
 import logging
-import tempfile
 from pathlib import Path
-from collections.abc import Iterable
-import httpx
-
-from slugify import slugify
 
 from api_clients import KibanaClient, ElasticsearchClient
 
 logger = logging.getLogger("elastic_stacker")
-
-
-def dump_saved_objects(
-    client: KibanaClient,
-    output_directory: Path = Path("./export"),
-    types: Iterable = None,
-    split_objects: bool = True,
-):
-    known_types = {t["name"] for t in client.allowed_types()["types"]}
-    logger.debug("Known Saved Object types: {}".format(known_types))
-
-    types = set(types) if types is not None else known_types
-
-    invalid_types = types.difference(known_types)
-    assert not invalid_types, "Invalid types: {}. Valid types include: {}".format(
-        invalid_types, known_types
-    )
-
-    logger.info(
-        "Starting export of {} from {} into directory {}".format(
-            types, client._base_url, output_directory
-        )
-    )
-
-    export_data = client.export_saved_objects(types=types, exclude_export_details=True)
-
-    if split_objects:
-        lines = export_data.splitlines()
-        # export_details = lines.pop()
-        for obj_type in types:
-            obj_type_output_dir = output_directory / "saved_objects" / obj_type
-            obj_type_output_dir.mkdir(parents=True, exist_ok=True)
-        for line in lines:
-            # some things have a "title" and others have a "name", and others have only have an id
-            # in order to get a meaningful filename for version control, we have to pick a different field for each.
-            # three nested dict.get() calls for three different fields to try
-            obj = json.loads(line)
-            attrs = obj["attributes"]
-            obj_name = attrs.get("title", attrs.get("name", obj.get("id", "NO_NAME")))
-            file_name = slugify(obj_name) + ".json"
-            output_file = output_directory / "saved_objects" / obj["type"] / file_name
-            with output_file.open("w") as fh:
-                json.dump(obj, fh, indent=4)
-    else:
-        output_file = output_directory / "saved_objects.ndjson"
-        with open(output_file, "w") as fh:
-            fh.write(export_data)
 
 
 def dump_watches(
@@ -140,44 +87,3 @@ def load_package_policies(
             policy = json.load(fh)
         policy_id = policy["id"]
         client.create_package_policy(id=policy_id, policy=policy)
-
-
-def load_saved_objects(
-    client: KibanaClient,
-    data_directory: Path = Path("./export"),
-    intermediate_file_max_size: float = 5e8,  # 500 MB
-    overwrite: bool = True,
-    delete_after_import: bool = False,
-    allow_failure: bool = False,
-):
-    so_file = data_directory / "saved_objects.ndjson"
-    so_dir = data_directory / "saved_objects"
-
-    # We could just iterate over all the files and POST them all individually,
-    # but that'd be awful slow so we can instead send them all as one batch
-    # by first concatenating them into this temporary file-like object in memory.
-    with tempfile.SpooledTemporaryFile(
-        mode="ab+", max_size=intermediate_file_max_size
-    ) as intermediate_file:
-        if so_file.exists():
-            assert so_file.is_file()
-            with so_file.open("rb") as fh:
-                intermediate_file.write(
-                    fh.read()
-                )  # This assumes that the size of the saved objects file is not too large to hold in memory.
-                intermediate_file.write(b"\n")
-        if so_dir.exists():
-            assert so_dir.is_dir()
-            for object_file in so_dir.glob("*/*.json"):
-                with object_file.open("rb") as fh:
-                    # kibana doesn't like the pretty-printing,
-                    # so we have to flatten it down one line each.
-                    object = json.load(fh)
-                    object_string = json.dumps(object)
-                    intermediate_file.write(str.encode(object_string))
-                    intermediate_file.write(b"\n")
-        # jump back to the start of the file
-        intermediate_file.seek(0)
-        client.import_saved_objects(
-            intermediate_file, overwrite=overwrite, create_new_copies=(not overwrite)
-        )
