@@ -14,19 +14,6 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class ElasticsearchClient(httpx.Client):
-    def _log_if_error(response: httpx.Response):
-        if not response.is_success:
-            try:
-                reason = response.json()
-            except Exception as e2:
-                reason = "{} {}".format(response.status_code, response.reason_phrase)
-            logger.error(
-                "Request to {method} {url} failed: {reason}".format(
-                    method=response.request.method,
-                    url=response.request.url,
-                    reason=reason,
-                )
-            )
 
     def enrich_policies(self, *args):
         endpoint = "_enrich/policy/{}".format(",".join(args))
@@ -57,27 +44,6 @@ class ElasticsearchClient(httpx.Client):
                 kwargs["headers"] = {"kbn-xsrf": "true"}
 
             super().__init__(*args, **kwargs)
-
-    def status(self):
-        status_response = self.get("/api/status")
-        status_response.raise_for_status()
-        status = status_response.json()
-        logger.info(
-            "{name} status: {summary}".format(
-                name=status["name"], summary=status["status"]["overall"]["summary"]
-            )
-        )
-        return status
-
-    def features(self):
-        features_response = self.get("/api/features")
-        features_response.raise_for_status()
-        return features_response.json()
-
-    def spaces(self):
-        spaces_response = self.get("/api/spaces/space")
-        spaces_response.raise_for_status()
-        return spaces_response.json()
 
     def agent_policies(
         self,
