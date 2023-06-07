@@ -43,19 +43,3 @@ class ElasticsearchClient(httpx.Client):
                 kwargs["headers"] = {"kbn-xsrf": "true"}
 
             super().__init__(*args, **kwargs)
-
-    def package_policies(self, id: str = None):
-        endpoint = "/api/fleet/package_policies"
-        if id is not None:
-            endpoint = urllib.parse.urljoin(endpoint, id)
-
-        package_policies_response = self.get(endpoint)
-        package_policies_response.raise_for_status()
-        return package_policies_response.json()
-
-    def create_package_policy(self, id: str, policy: dict):
-        endpoint = "/api/fleet/package_policies/{}".format(id)
-        response = self.put(endpoint, json=policy)
-        logger.debug(response.json())
-        response.raise_for_status()
-        return response.json()
