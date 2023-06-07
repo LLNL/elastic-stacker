@@ -9,29 +9,28 @@ logger = logging.getLogger("elastic_stacker")
 
 class APIClient(httpx.Client):
     def raise_for_status(self, response: httpx.Response):
-        self.log_for_status(response)
         response.raise_for_status()
 
     def log_for_status(self, response: httpx.Response):
         if not response.is_success:
-            try:
-                reason = response.json()  # ["reason"] ?
-            except Exception:
+            response.read()
+            response_doc = response.json()
+            error = response_doc.get("error")
+            if error:
+                reason = "'{type}: {reason}'".format(**error)
+            else:
                 reason = "{} {}".format(response.status_code, response.reason_phrase)
+
             logger.error(
-                "Request to {method} {url} failed with error {reason}".format(
+                "Request to {method} {url} failed: {reason}".format(
                     method=response.request.method,
                     url=response.request.url,
                     reason=reason,
                 )
             )
 
-    def __init__(self, *args, allow_failure: bool = False, **kwargs):
-        if allow_failure:
-            failure_hook = self.log_for_status
-        else:
-            failure_hook = self.raise_for_status
-
-        kwargs["event_hooks"] = {"response": [failure_hook]}
-
+    def __init__(self, *args, **kwargs):
+        kwargs["event_hooks"] = {
+            "response": [self.log_for_status, self.raise_for_status]
+        }
         super().__init__(*args, **kwargs)

@@ -46,12 +46,9 @@ class PipelineController(GenericElasticsearchController):
 
     def dump(self, data_directory: pathlib.Path, include_managed: bool = False):
         pipelines_directory = data_directory / self.resource_directory
-        pipelines_directory.mkdir(exist_ok=True)
+        pipelines_directory.mkdir(exist_ok=True, parents=True)
 
         pipelines = self.get()
-
-        # if run with "allow_failure" client argument, may cause bad behavior
-        assert "error" not in pipelines and "root_cause" not in pipelines.get("error")
 
         for name, pipeline in pipelines.items():
             if include_managed or not pipeline.get("_meta", {}).get("managed"):
