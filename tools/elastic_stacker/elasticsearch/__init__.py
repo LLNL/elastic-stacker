@@ -5,6 +5,7 @@ import httpx
 from .generic import GenericElasticsearchController
 from .pipelines import PipelineController
 from .transforms import TransformController
+from .watches import WatchController
 
 logger = logging.getLogger("elastic_stacker")
 
@@ -14,3 +15,4 @@ class ElasticsearchController(GenericElasticsearchController):
         super().__init__(client)
         self.pipelines = PipelineController(client)
         self.transforms = TransformController(client)
+        self.watches = WatchController(client)

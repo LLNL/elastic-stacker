@@ -49,25 +49,6 @@ class ElasticsearchClient(httpx.Client):
         response.raise_for_status()
         return response_data
 
-    def query_watches(
-        self,
-        offset: int = 0,
-        size: int = 10,
-        # query:dict=None,
-        # sort=None,
-        # search_after=None
-    ):
-        params = {
-            "from": offset,
-            "size": size,
-            # "query": query,
-            # "sort": sort,
-            # "search_after": search_after,
-        }
-        watches_response = self.post("/_watcher/_query/watches", json=params)
-        logger.debug(str(watches_response.json()))
-        watches_response.raise_for_status()
-        return watches_response.json()
 
     class KibanaClient(httpx.Client):
         def __init__(self, *args, **kwargs):

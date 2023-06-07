@@ -7,18 +7,6 @@ from api_clients import KibanaClient, ElasticsearchClient
 logger = logging.getLogger("elastic_stacker")
 
 
-def dump_watches(
-    client: ElasticsearchClient,
-    output_directory: Path = Path("./export"),
-):
-    watches_directory = output_directory / "watches"
-    watches_directory.mkdir(exist_ok=True)
-    for watch in client.depaginate(client.query_watches, "watches", page_size=10):
-        file_path = watches_directory / (watch["_id"] + ".json")
-        with file_path.open("w") as file:
-            file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))
-
-
 def dump_enrich_policies(
     client: ElasticsearchClient, output_directory: Path = Path("./export")
 ):
