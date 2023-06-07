@@ -32,7 +32,8 @@ class EnrichPolicyController(GenericElasticsearchController):
         return response_data
 
     def dump(
-        self, data_directory: pathlib.Path,
+        self,
+        data_directory: pathlib.Path,
     ):
         enrich_policies_directory = data_directory / self.resource_directory
         enrich_policies_directory.mkdir(exist_ok=True, parents=True)
@@ -44,7 +45,6 @@ class EnrichPolicyController(GenericElasticsearchController):
             policy["match"].pop("name")
             with policy_file.open("w") as fh:
                 fh.write(json.dumps(policy, sort_keys=True, indent=4))
-
 
     def load_enrich_policies(
         self,
