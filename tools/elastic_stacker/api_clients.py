@@ -49,7 +49,6 @@ class ElasticsearchClient(httpx.Client):
         response.raise_for_status()
         return response_data
 
-
     class KibanaClient(httpx.Client):
         def __init__(self, *args, **kwargs):
             if "headers" in kwargs:

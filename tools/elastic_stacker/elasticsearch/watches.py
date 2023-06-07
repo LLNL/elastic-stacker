@@ -29,16 +29,15 @@ class WatchController(GenericElasticsearchController):
         response = self.client.post("/_watcher/_query/watches", json=post_body)
         return response.json()
 
+    # TODO
     def create():
         pass
 
+    # TODO
     def load():
         pass
 
-    def dump(
-        self,
-        output_directory: pathlib.Path
-    ):
+    def dump(self, output_directory: pathlib.Path):
         watches_directory = output_directory / self.resource_directory
         watches_directory.mkdir(exist_ok=True)
 
