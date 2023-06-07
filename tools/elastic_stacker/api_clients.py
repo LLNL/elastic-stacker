@@ -14,7 +14,6 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class ElasticsearchClient(httpx.Client):
-
     def enrich_policies(self, *args):
         endpoint = "_enrich/policy/{}".format(",".join(args))
         response = self.get(endpoint)

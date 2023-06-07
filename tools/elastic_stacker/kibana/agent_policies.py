@@ -26,12 +26,10 @@ class AgentPolicyController(GenericKibanaController):
             "page": page,
             "full": full,
             "noAgentCount": noAgentCount,
-            "kuery": kuery
+            "kuery": kuery,
         }
         query_params = self._clean_params(query_params)
-        response = self.client.get(
-            self.base_endpoint, params=query_params
-        )
+        response = self.client.get(self.base_endpoint, params=query_params)
         return response.json()
 
     # TODO

@@ -21,20 +21,6 @@ def dump_enrich_policies(
             fh.write(json.dumps(policy, sort_keys=True, indent=4))
 
 
-
-
-def dump_package_policies(
-    client: KibanaClient, output_directory: Path = Path("./export")
-):
-    package_policies_directory = output_directory / "package_policies"
-    package_policies_directory.mkdir(exist_ok=True)
-    for policy in client.package_policies()["items"]:
-        filename = slugify(policy["name"]) + ".json"
-        file_path = package_policies_directory / filename
-        with file_path.open("w") as file:
-            file.write(json.dumps(policy, indent=4))
-
-
 def load_enrich_policies(
     client: ElasticsearchClient,
     data_directory: Path = Path("./export"),
@@ -48,17 +34,3 @@ def load_enrich_policies(
                 policy = json.load(fh)
             policy_name = policy_file.stem
             client.create_enrich_policy(policy_name, policy)
-
-
-def load_package_policies(
-    client: KibanaClient,
-    data_directory: Path = Path("./export"),
-    delete_after_import: bool = False,
-    allow_failure: bool = False,
-):
-    package_policies_directory = data_directory / "package_policies"
-    for policy_file in package_policies_directory.glob("*.json"):
-        with policy_file.open("r") as fh:
-            policy = json.load(fh)
-        policy_id = policy["id"]
-        client.create_package_policy(id=policy_id, policy=policy)
