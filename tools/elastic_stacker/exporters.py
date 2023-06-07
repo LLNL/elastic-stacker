@@ -86,33 +86,6 @@ def dump_enrich_policies(
             fh.write(json.dumps(policy, sort_keys=True, indent=4))
 
 
-def dump_transforms(
-    client: ElasticsearchClient,
-    output_directory: Path = Path("./export"),
-    include_managed: bool = False,
-):
-    transforms_directory = output_directory / "transforms"
-    transforms_directory.mkdir(exist_ok=True)
-    for transform in client.depaginate(client.transforms, "transforms", page_size=100):
-        if include_managed or not transform.get("_meta", {}).get("managed"):
-            for key in ["authorization", "version", "create_time"]:
-                if key in transform:
-                    transform.pop(key)
-            file_path = transforms_directory / (transform.pop("id") + ".json")
-            with file_path.open("w") as file:
-                file.write(json.dumps(transform, indent=4, sort_keys=True))
-
-    # we also need to know whether a transform was started at the time it was dumped
-    stats = {}
-    for transform in client.depaginate(
-        client.transform_stats, "transforms", page_size=100
-    ):
-        stats[transform["id"]] = transform
-    transform_stats_file = transforms_directory / "_stats.json"
-    with transform_stats_file.open("w") as file:
-        file.write(json.dumps(stats, indent=4, sort_keys=True))
-
-
 def dump_agent_policies(
     client: KibanaClient,
     output_directory: Path = Path("./export"),
@@ -153,67 +126,6 @@ def load_enrich_policies(
                 policy = json.load(fh)
             policy_name = policy_file.stem
             client.create_enrich_policy(policy_name, policy)
-
-
-def load_transforms(
-    client: ElasticsearchClient,
-    data_directory: Path = Path("./export"),
-    delete_after_import: bool = False,
-    allow_failure: bool = False,
-):
-    transforms_directory = data_directory / "transforms"
-    if transforms_directory.is_dir():
-        # create a map of all transforms by id
-        transforms_generator = client.depaginate(
-            client.transforms, "transforms", page_size=100
-        )
-        transforms_map = {
-            transform["id"]: transform for transform in transforms_generator
-        }
-
-        stats_file = transforms_directory / "_stats.json"
-        with stats_file.open("r") as fh:
-            reference_stats = json.load(fh)
-
-        current_stats = {
-            t["id"]: t
-            for t in client.depaginate(
-                client.transform_stats, "transforms", page_size=100
-            )
-        }
-
-        for transform_file in transforms_directory.glob("*.json"):
-            if transform_file == stats_file:
-                continue
-            logger.debug("Loading {}".format(transform_file))
-            transform_id = transform_file.stem
-            with transform_file.open("r") as fh:
-                loaded_transform = json.load(fh)
-            if transform_id in transforms_map:
-                logger.info("Transform {} already exists.".format(transform_id))
-                # the transform already exists; if it's changed we need to delete and recreate it
-                existing_transform = transforms_map[transform_id]
-                for key, loaded_value in loaded_transform.items():
-                    if loaded_value != existing_transform[key]:
-                        logger.info(
-                            "Transform {} differs by key {}, deleting and recreating.".format(
-                                transform_id, key
-                            )
-                        )
-                        client.stop_transform(transform_id, wait_for_completion=True)
-                        client.delete_transform(transform_id)
-                        client.create_transform(
-                            transform_id, loaded_transform, defer_validation=True
-                        )
-                        break
-            else:
-                logger.info(
-                    "Creating new transform with id {}".format(transform_id, key)
-                )
-                client.create_transform(
-                    transform_id, loaded_transform, defer_validation=True
-                )
-            # client.set_transform_state(transform_id, target_state=reference_stats[transform_id]["state"])
 
 
 def load_package_policies(
