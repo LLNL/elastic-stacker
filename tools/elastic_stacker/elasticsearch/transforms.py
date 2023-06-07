@@ -57,7 +57,7 @@ class TransformController(GenericElasticsearchController):
     ):
         if not ids:
             ids = ["_all"]
-        endpoint = self._build_endpoint(ids) + "/_stats"
+        endpoint = self._build_endpoint(*ids) + "/_stats"
         query_params = {
             "allow_no_match": allow_no_match,
             "from": offset,
@@ -221,11 +221,11 @@ class TransformController(GenericElasticsearchController):
 
     def dump(
         self,
-        output_directory: pathlib.Path,
+        data_directory: pathlib.Path,
         include_managed: bool = False,
     ):
-        transforms_directory = output_directory / self.resource_directory
-        transforms_directory.mkdir(exist_ok=True)
+        transforms_directory = data_directory / self.resource_directory
+        transforms_directory.mkdir(exist_ok=True, parents=True)
 
         for transform in self._depaginate(self.get, key="transforms", page_size=100):
             if include_managed or not transform.get("_meta", {}).get("managed"):
