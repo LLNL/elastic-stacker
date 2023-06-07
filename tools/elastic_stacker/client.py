@@ -1,17 +1,13 @@
 import logging
-import typing
 
 import httpx
-from httpx._client import USE_CLIENT_DEFAULT, UseClientDefault
-from httpx._models import Response
-from httpx._types import AuthTypes, CookieTypes, HeaderTypes, QueryParamTypes, RequestContent, RequestData, RequestExtensions, RequestFiles, TimeoutTypes, URLTypes
 
-logger=logging.getLogger("elastic_stacker")
+logger = logging.getLogger("elastic_stacker")
 
 # subclassing httpx.client to reduce the boilerplate that goes with every request
 
-class APIClient(httpx.Client):
 
+class APIClient(httpx.Client):
     def raise_for_status(self, response: httpx.Response):
         self.log_for_status(response)
         response.raise_for_status()
@@ -36,8 +32,6 @@ class APIClient(httpx.Client):
         else:
             failure_hook = self.raise_for_status
 
-        kwargs["event_hooks"] = {
-            "response": [failure_hook]
-        }
+        kwargs["event_hooks"] = {"response": [failure_hook]}
 
         super().__init__(*args, **kwargs)
