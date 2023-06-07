@@ -1,7 +1,7 @@
 import os
 import sys
 import logging
-import pathlib
+from pathlib import Path
 from collections import ChainMap
 from typing import Iterable
 
@@ -43,7 +43,7 @@ logger = logging.getLogger("elastic_stacker")
 def find_config():
     env_path = os.getenv(CONFIG_ENV_VAR)
     if env_path is not None:
-        env_path = pathlib.Path(env_path).expanduser()
+        env_path = Path(env_path).expanduser()
         if not env_path.exists():
             raise FileNotFoundError(env_path)
         elif env_path.is_dir():
@@ -52,13 +52,13 @@ def find_config():
             return env_path
     else:
         for path in CONFIG_FILE_PRECEDENCE:
-            path = pathlib.Path(path).expanduser()
+            path = Path(path).expanduser()
             if path.exists() and path.is_file():
                 return path
         raise FileNotFoundError(", ".join(CONFIG_FILE_PRECEDENCE))
 
 
-def read_config(path: pathlib.Path = None):
+def read_config(path: Path = None):
     logger.info("Reading configuration from file {}".format(path))
     with path.open("r") as fh:
         raw_config = yaml.safe_load(fh)
@@ -75,30 +75,35 @@ def load_config(path: os.PathLike = None):
     if path is None:
         path = find_config()
     else:
-        path = pathlib.Path(path)
+        path = Path(path)
     raw_config = read_config(path)
     config = validate_config(raw_config)
     return config
 
 
 def chain_configs(configs: Iterable[dict], keys: Iterable[str] = None):
-    chain = []
+    """
+    overlay several mapping types on top of each other. Works somewhat like
+    collections.ChainMap, but returns a single flat dict at the end.
+    If `keys` is provided, will extract the value at each key in each mapping,
+    and use that as the value to overlay.
+    Useful for complex hierarchies of defaults which override one another.
+    """
+    result = {}
     for config in configs:
         if keys is not None:
-            for key in keys:
-                chain.append(config.get(key, {}))
+            for key in reversed(keys):
+                result.update(config.get(key, {}))
         else:
-            chain.append(config)
-    return ChainMap(*chain)
+            result.update(config)
+    return result
 
 
 def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
     """
     The configuration file for Stacker includes the notion of "configuration profiles"
     which can be selected by the user at runtime. It also includes several levels of
-    defaults which can be overriden by the level above them. In order to implement this,
-    we generate a final profile using the collections.ChainMap class. For more details:
-    https://docs.python.org/3/library/collections.html#collections.ChainMap
+    defaults which can be overriden by the level above them.
     """
     schema = ProfileSchema()
 
@@ -129,6 +134,7 @@ def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
     # for example, profile.kibana overrides profile.client
 
     final_profile = dict(selected_profile)
+
     final_profile["elasticsearch"] = chain_configs(
         configs, keys=["client", "elasticsearch"]
     )
@@ -137,6 +143,6 @@ def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
     final_profile["load"] = chain_configs(configs, keys=["io", "load"])
     final_profile["dump"] = chain_configs(configs, keys=["io", "dump"])
 
-    final_profile = schema.load(dict(final_profile))
+    final_profile = schema.load(final_profile)
 
     return final_profile

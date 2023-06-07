@@ -1,6 +1,6 @@
 import logging
 import json
-import pathlib
+from pathlib import Path
 
 from .generic import GenericElasticsearchController
 
@@ -8,7 +8,7 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class WatchController(GenericElasticsearchController):
-    resource_directory = "watches"
+    _resource_directory = "watches"
 
     def query(
         self,
@@ -26,7 +26,7 @@ class WatchController(GenericElasticsearchController):
             "search_after": search_after,
         }
         post_body = self._clean_params(post_body)
-        response = self.client.post("/_watcher/_query/watches", json=post_body)
+        response = self._client.post("/_watcher/_query/watches", json=post_body)
         return response.json()
 
     # TODO
@@ -37,11 +37,9 @@ class WatchController(GenericElasticsearchController):
     def load():
         pass
 
-    def dump(self, output_directory: pathlib.Path):
-        watches_directory = output_directory / self.resource_directory
-        watches_directory.mkdir(exist_ok=True)
-
+    def dump(self, output_directory: Path):
+        self._create_working_dir()
         for watch in self._depaginate(self.query, "watches", page_size=10):
-            file_path = watches_directory / (watch["_id"] + ".json")
+            file_path = self._working_directory / (watch["_id"] + ".json")
             with file_path.open("w") as file:
                 file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))

@@ -1,7 +1,7 @@
 import os
 
 import logging
-import pathlib
+from pathlib import Path
 
 import httpx
 import dotwiz
@@ -37,7 +37,7 @@ class PathField(fields.Field):
         return str(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
-        return pathlib.Path(value).expanduser()
+        return Path(value).expanduser()
 
 
 class PathValidator(validate.Validator):

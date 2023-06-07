@@ -1,6 +1,6 @@
 import logging
 import json
-import pathlib
+from pathlib import Path
 
 from .generic import GenericElasticsearchController
 
@@ -8,19 +8,19 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class EnrichPolicyController(GenericElasticsearchController):
-    resource_directory = "enrich_policies"
+    _resource_directory = "enrich_policies"
 
     def _build_endpoint(self, names: str) -> str:
         return "_enrich/policy/{}".format(",".join(names))
 
     def get(self, *names):
         endpoint = self._build_endpoint(*names)
-        response = self.client.get(endpoint)
+        response = self._client.get(endpoint)
         return response.json()
 
     def create(self, name: str, policy: dict):
         endpoint = self._build_endpoint(name)
-        response = self.client.put(endpoint, json=policy)
+        response = self._client.put(endpoint, json=policy)
         response_data = response.json()
         if "error" in response_data:
             if response_data["error"]["type"] == "resource_already_exists_exception":
@@ -31,16 +31,11 @@ class EnrichPolicyController(GenericElasticsearchController):
                 logger.warn(response_data["reason"])
         return response_data
 
-    def dump(
-        self,
-        data_directory: pathlib.Path,
-    ):
-        enrich_policies_directory = data_directory / self.resource_directory
-        enrich_policies_directory.mkdir(exist_ok=True, parents=True)
-
+    def dump(self):
+        self._create_working_dir()
         for policy in self.get()["policies"]:
             filename = policy["config"]["match"]["name"] + ".json"
-            policy_file = enrich_policies_directory / filename
+            policy_file = self._working_directory / filename
             policy = policy["config"]
             policy["match"].pop("name")
             with policy_file.open("w") as fh:
@@ -48,13 +43,11 @@ class EnrichPolicyController(GenericElasticsearchController):
 
     def load(
         self,
-        data_directory: pathlib.Path,
         allow_failure: bool = False,
         delete_after_import: bool = False,
     ):
-        enrich_policies_directory = data_directory / self.resource_directory
-        if enrich_policies_directory.is_dir():
-            for policy_file in enrich_policies_directory.glob("*.json"):
+        if self._working_directory.is_dir():
+            for policy_file in self._working_directory.glob("*.json"):
                 with policy_file.open("r") as fh:
                     policy = json.load(fh)
                 policy_name = policy_file.stem

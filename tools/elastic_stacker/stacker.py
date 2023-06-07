@@ -15,6 +15,9 @@ from utils.client import APIClient
 
 
 class Stacker:
+    elasticsearch: ElasticsearchController
+    kibana: KibanaController
+
     def __init__(
         self,
         config: str = None,
@@ -32,12 +35,24 @@ class Stacker:
             "client": {"verify": ca},
             "io": {"data_directory": data_directory},
         }
+
         self.profile = make_profile(
             global_config, profile_name=profile, overrides=overrides
         )
+        self._elasticsearch_client = APIClient(**self.profile["elasticsearch"])
+        self._kibana_client = APIClient(**self.profile["kibana"])
 
-    def show_profile(self):
-        print(self.profile)
+        self.elasticsearch = ElasticsearchController(self._elasticsearch_client)
+        self.kibana = KibanaController(self._kibana_client)
+        # steal the attrs from the controllers so we can do
+        # "stacker.py watches dump" instead of "stacker.py elasticsearch watches dump"
+        # for controller in (self._elasticsearch, self._kibana):
+        #     for name, attr in controller.__dict__.items():
+        #         if not name.startswith("_"):
+        #             self.__setattr__(name, attr)
+
+    def nop(self):
+        pass
 
 
 def main():

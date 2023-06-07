@@ -13,7 +13,7 @@ profiles:
     kibana:
       base_url: https://lc-kibana-pre.llnl.gov
     elasticsearch:
-      base_url: https://lc-elastic-hot-1-pre.llnl.gov
+      base_url: https://lc-elastic-hot-1-pre.llnl.gov:9200
     client:
       headers:
         Authorization: "Apikey <REDACTED>"

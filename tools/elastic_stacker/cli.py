@@ -3,7 +3,7 @@
 import os
 import sys
 import logging
-import pathlib
+from pathlib import Path
 import shutil
 import tempfile
 
@@ -60,9 +60,9 @@ def set_loglevel(ctx, param, value: int):
     return value
 
 
-def load_config(ctx, param, config_file: pathlib.Path):
+def load_config(ctx, param, config_file: Path):
     for config_path in [config_file] + CONFIG_FILE_PRECEDENCE:
-        config_file = pathlib.Path(config_path).expanduser().absolute()
+        config_file = Path(config_path).expanduser().absolute()
         logger.debug("Looking for configuration in {}".format(config_file))
         if config_file.is_file():
             logger.debug("Found configuration in {}".format(config_file))
@@ -94,7 +94,7 @@ def load_config(ctx, param, config_file: pathlib.Path):
 @click.option(
     "-c",
     "--config",
-    type=click.Path(dir_okay=False, readable=True, path_type=pathlib.Path),
+    type=click.Path(dir_okay=False, readable=True, path_type=Path),
     help="The path to the configuration file to use.",
     callback=load_config,
     default=os.getenv("STACKER_CONFIG", CONFIG_FILE_PRECEDENCE[0]),
@@ -143,11 +143,11 @@ def cli(ctx, config, profile_name, quiet, verbose):
 @click.option(
     "-d",
     "--data_directory",
-    type=click.Path(file_okay=False, writable=True, path_type=pathlib.Path),
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
     help="The directory where the exported files should be written.",
-    default=pathlib.Path("./export"),
+    default=Path("./export"),
 )
-def export_group(ctx: click.Context, data_directory: pathlib.Path):
+def export_group(ctx: click.Context, data_directory: Path):
     data_directory = data_directory.expanduser()
     if data_directory.exists():
         logger.warning("Data directory {} already exists.".format(data_directory))
@@ -241,11 +241,9 @@ def export_enrich_policies_command(obj):
 @click.option(
     "-d",
     "--data_directory",
-    type=click.Path(
-        file_okay=False, exists=True, readable=True, path_type=pathlib.Path
-    ),
+    type=click.Path(file_okay=False, exists=True, readable=True, path_type=Path),
     help="The directory where the imported files should be read from.",
-    default=pathlib.Path("./export"),
+    default=Path("./export"),
 )
 @click.option(
     "-t",
@@ -273,7 +271,7 @@ def export_enrich_policies_command(obj):
 )
 def import_group(
     ctx: click.Context,
-    data_directory: pathlib.Path,
+    data_directory: Path,
     temp_copy: bool,
     retries: int,
     delete_after_import: bool,
@@ -286,7 +284,7 @@ def import_group(
 
     data_directory = data_directory.expanduser()
     if temp_copy:
-        tmp_data_directory = pathlib.Path(tempfile.mkdtemp(prefix="stacker_"))
+        tmp_data_directory = Path(tempfile.mkdtemp(prefix="stacker_"))
         shutil.copy(data_directory, tmp_data_directory)
         data_directory = tmp_data_directory
 

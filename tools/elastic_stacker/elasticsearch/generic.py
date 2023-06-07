@@ -1,11 +1,18 @@
 import httpx
+from pathlib import Path
 
 
 class GenericElasticsearchController:
-    client: httpx.Client
+    _client: httpx.Client
+    _working_directory: Path
 
-    def __init__(self, client: httpx.Client):
-        self.client = client
+    def __init__(
+        self,
+        client: httpx.Client,
+        data_directory: Path,
+    ):
+        self._client = client
+        self._working_directory = data_directory / self._resource_directory
 
     def _depaginate(self, method, key, page_size=10):
         """
@@ -27,3 +34,6 @@ class GenericElasticsearchController:
         # but httpx also does not let the user modify the request before it's sent.
         # (see https://www.python-httpx.org/compatibility/#event-hooks)
         return {k: v for k, v in params.items() if v is not None}
+
+    def _create_working_dir(self):
+        self._working_directory.mkdir(parents=True, exist_ok=True)

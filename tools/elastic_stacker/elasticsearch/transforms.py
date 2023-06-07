@@ -1,6 +1,6 @@
 import logging
 import json
-import pathlib
+from pathlib import Path
 
 from .generic import GenericElasticsearchController
 
@@ -8,12 +8,12 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class TransformController(GenericElasticsearchController):
-    base_endpoint = "_transform"
-    resource_directory = "transforms"
+    _base_endpoint = "_transform"
+    _resource_directory = "transforms"
 
     def _build_endpoint(self, *ids: str) -> str:
         id_string = ",".join(ids)
-        return "{}/{}".format(self.base_endpoint, id_string)
+        return "{}/{}".format(self._base_endpoint, id_string)
 
     def get(
         self,
@@ -31,7 +31,7 @@ class TransformController(GenericElasticsearchController):
         }
         endpoint = self._build_endpoint(*ids)
         query_params = self._clean_params(query_params)
-        response = self.client.get(endpoint, params=query_params)
+        response = self._client.get(endpoint, params=query_params)
         return response.json()
 
     def create(
@@ -45,7 +45,7 @@ class TransformController(GenericElasticsearchController):
         query_params = {"defer_validation": defer_validation, "timeout": timeout}
         query_params = self._clean_params(query_params)
 
-        response = self.client.put(endpoint, json=transform, params=query_params)
+        response = self._client.put(endpoint, json=transform, params=query_params)
         return response.json()
 
     def stats(
@@ -64,7 +64,7 @@ class TransformController(GenericElasticsearchController):
             "size": size,
         }
         query_params = self._clean_params(query_params)
-        response = self.client.get(endpoint, params=query_params)
+        response = self._client.get(endpoint, params=query_params)
         return response.json()
 
     def set_state(
@@ -108,7 +108,7 @@ class TransformController(GenericElasticsearchController):
         endpoint = self._build_endpoint(id) + "/_start"
         query_params = {"from": from_time, "timeout": timeout}
         query_params = self._clean_params(query_params)
-        response = self.client.post(endpoint, params=query_params)
+        response = self._client.post(endpoint, params=query_params)
         return response.json()
 
     def stop(
@@ -151,7 +151,7 @@ class TransformController(GenericElasticsearchController):
 
         query_params = self._clean_params(query_params)
 
-        response = self.client.delete(endpoint, params=query_params)
+        response = self._client.delete(endpoint, params=query_params)
         return response.json()
 
     def update(
@@ -165,11 +165,11 @@ class TransformController(GenericElasticsearchController):
 
         query_params = {"defer_validation": defer_validation, "timeout": timeout}
         query_params = self._clean_params(query_params)
-        response = self.client.post(endpoint, json=transform, params=query_params)
+        response = self._client.post(endpoint, json=transform, params=query_params)
         return response.json()
 
-    def load(self, data_directory: pathlib.Path, delete_after_import: bool = False):
-        transforms_directory = data_directory / self.resource_directory
+    def load(self, data_directory: Path, delete_after_import: bool = False):
+        transforms_directory = data_directory / self._resource_directory
         if transforms_directory.is_dir():
             # create a map of all transforms by id
             transforms_generator = self._depaginate(
@@ -221,19 +221,17 @@ class TransformController(GenericElasticsearchController):
 
     def dump(
         self,
-        data_directory: pathlib.Path,
+        data_directory: Path,
         include_managed: bool = False,
     ):
-        transforms_directory = data_directory / self.resource_directory
-        transforms_directory.mkdir(exist_ok=True, parents=True)
-
+        self._create_working_dir()
         for transform in self._depaginate(self.get, key="transforms", page_size=100):
             if include_managed or not transform.get("_meta", {}).get("managed"):
                 # trim off keys that can't be reimported
                 for key in ["authorization", "version", "create_time"]:
                     if key in transform:
                         transform.pop(key)
-                file_path = transforms_directory / (transform.pop("id") + ".json")
+                file_path = self._working_directory / (transform.pop("id") + ".json")
                 with file_path.open("w") as file:
                     file.write(json.dumps(transform, indent=4, sort_keys=True))
 
@@ -241,6 +239,6 @@ class TransformController(GenericElasticsearchController):
         stats = {}
         for transform in self._depaginate(self.stats, key="transforms", page_size=100):
             stats[transform["id"]] = transform
-        transform_stats_file = transforms_directory / "_stats.json"
+        transform_stats_file = self._working_directory / "_stats.json"
         with transform_stats_file.open("w") as file:
             file.write(json.dumps(stats, indent=4, sort_keys=True))
