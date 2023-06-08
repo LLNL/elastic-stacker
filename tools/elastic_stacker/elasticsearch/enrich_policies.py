@@ -10,7 +10,7 @@ logger = logging.getLogger("elastic_stacker")
 class EnrichPolicyController(GenericController):
     _resource_directory = "enrich_policies"
 
-    def _build_endpoint(self, names: str) -> str:
+    def _build_endpoint(self, *names: str) -> str:
         return "_enrich/policy/{}".format(",".join(names))
 
     def get(self, *names):

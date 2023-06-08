@@ -48,17 +48,19 @@ class Stacker:
             "headers", {}
         ) | {"kbn-xsrf": "true"}
 
-        self._kibana_client = APIClient(**self.profile["kibana"])
+        kibana_client = APIClient(**self.profile["kibana"])
+        elasticsearch_client = APIClient(**self.profile["elasticsearch"])
+        data_directory = self.profile["io"]["data_directory"]
 
-        self._elasticsearch_client = APIClient(**self.profile["elasticsearch"])
-
-        self.saved_objects = SavedObjectController(self._kibana_client)
-        self.agent_policies = AgentPolicyController(self._kibana_client)
-        self.package_policies = PackagePolicyController(self._kibana_client)
-        self.pipelines = PipelineController(self._elasticsearch_client)
-        self.transforms = TransformController(self._elasticsearch_client)
-        self.watches = WatchController(self._elasticsearch_client)
-        self.enrich_policies = EnrichPolicyController(self._elasticsearch_client)
+        self.saved_objects = SavedObjectController(kibana_client, data_directory)
+        self.agent_policies = AgentPolicyController(kibana_client, data_directory)
+        self.package_policies = PackagePolicyController(kibana_client, data_directory)
+        self.pipelines = PipelineController(elasticsearch_client, data_directory)
+        self.transforms = TransformController(elasticsearch_client, data_directory)
+        self.watches = WatchController(elasticsearch_client, data_directory)
+        self.enrich_policies = EnrichPolicyController(
+            elasticsearch_client, data_directory
+        )
 
     def nop(self):
         pass

@@ -4,6 +4,7 @@ from pathlib import Path
 
 class GenericController:
     _client: httpx.Client
+    _resource_directory: str = ""
 
     def __init__(
         self,
@@ -21,6 +22,8 @@ class GenericController:
         offset = 0
         results = {"count": float("inf")}
         while offset < results["count"]:
+            # Kibana's paginated APIs don't use "offset"; I should change
+            # the function signature for those methods to retain consistency.
             results = method(offset=offset, size=page_size)
             for result in results[key]:
                 offset += 1

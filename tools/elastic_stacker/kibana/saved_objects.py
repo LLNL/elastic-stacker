@@ -13,7 +13,7 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class SavedObjectController(GenericController):
-    resource_directory = "saved_objects"
+    _resource_directory = "saved_objects"
 
     def types(self):
         """
@@ -139,7 +139,7 @@ class SavedObjectController(GenericController):
                 create_new_copies=(not overwrite),
             )
 
-    def dump(self, types: typing.Iterable = None):
+    def dump(self, *types: str):
         known_types = {t["name"] for t in self.types()["types"]}
 
         types = set(types) if types is not None else known_types

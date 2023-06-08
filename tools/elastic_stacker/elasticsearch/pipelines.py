@@ -46,7 +46,7 @@ class PipelineController(GenericController):
         )
         return response.json()
 
-    def dump(self, data_directory: Path, include_managed: bool = False):
+    def dump(self, include_managed: bool = False):
         self._create_working_dir()
         pipelines = self.get()
         for name, pipeline in pipelines.items():

@@ -221,7 +221,6 @@ class TransformController(GenericController):
 
     def dump(
         self,
-        data_directory: Path,
         include_managed: bool = False,
     ):
         self._create_working_dir()

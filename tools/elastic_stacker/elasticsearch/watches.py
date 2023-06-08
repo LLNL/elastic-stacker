@@ -37,7 +37,7 @@ class WatchController(GenericController):
     def load():
         pass
 
-    def dump(self, output_directory: Path):
+    def dump(self):
         self._create_working_dir()
         for watch in self._depaginate(self.query, "watches", page_size=10):
             file_path = self._working_directory / (watch["_id"] + ".json")

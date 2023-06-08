@@ -112,24 +112,10 @@ class IOConfigSchema(BaseSchema):
     data_directory = PathField(validate=PathValidator(file_ok=False))
 
 
-class DumperConfigSchema(IOConfigSchema):
-    include_managed = fields.Boolean()
-
-
-class LoaderConfigSchema(IOConfigSchema):
-    data_directory = PathField(validate=PathValidator(file_ok=False))
-    temp_copy = fields.Boolean()
-    delete_after_import = fields.Boolean()
-    allow_failure = fields.Boolean()
-    retries = fields.Integer()
-
-
 class ProfileSchema(BaseSchema):
     client = fields.Nested(APIClientConfigSchema)
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
-    load = fields.Nested(LoaderConfigSchema)
-    dump = fields.Nested(DumperConfigSchema)
     io = fields.Nested(IOConfigSchema)
 
 
