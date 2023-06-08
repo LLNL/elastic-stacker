@@ -32,7 +32,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
                 logger.warn(response_data["reason"])
         return response_data
 
-    def dump(self, data_directory: os.PathLike = None):
+    def dump(self, data_directory: os.PathLike = None, **kwargs):
         working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self.get()["policies"]:
             filename = policy["config"]["match"]["name"] + ".json"
@@ -47,6 +47,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         allow_failure: bool = False,
         delete_after_import: bool = False,
+        **kwargs
     ):
         working_directory = self._get_working_dir(data_directory, create=True)
 

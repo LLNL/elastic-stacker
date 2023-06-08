@@ -173,6 +173,7 @@ class TransformController(ElasticsearchAPIController):
         self,
         delete_after_import: bool = False,
         data_directory: os.PathLike = None,
+        **kwargs
     ):
         working_directory = self._get_working_dir(data_directory, create=False)
         if working_directory.is_dir():
@@ -228,6 +229,7 @@ class TransformController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
+        **kwargs
     ):
         working_directory = self._get_working_dir(data_directory, create=True)
         for transform in self._depaginate(self.get, key="transforms", page_size=100):

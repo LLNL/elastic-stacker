@@ -37,6 +37,7 @@ class PackagePolicyController(FleetAPIController):
         delete_after_import: bool = False,
         allow_failure: bool = False,
         data_directory: os.PathLike = None,
+        **kwargs
     ):
         working_directory = self._get_working_dir(data_directory, create=False)
         for policy_file in working_directory.glob("*.json"):
@@ -45,7 +46,7 @@ class PackagePolicyController(FleetAPIController):
             policy_id = policy["id"]
             self.create(id=policy_id, policy=policy)
 
-    def dump(self, data_directory: os.PathLike = None):
+    def dump(self, data_directory: os.PathLike = None, **kwargs):
         working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self._depaginate(self.get):
             filename = slugify(policy["name"]) + ".json"

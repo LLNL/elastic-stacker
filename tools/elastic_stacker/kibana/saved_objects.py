@@ -117,6 +117,7 @@ class SavedObjectController(GenericController):
         delete_after_import: bool = False,
         allow_failure: bool = False,
         data_directory: os.PathLike = None,
+        **kwargs
     ):
         # We could just iterate over all the files and POST them all individually,
         # but that'd be awful slow, so we can instead send them all as one batch
@@ -143,11 +144,7 @@ class SavedObjectController(GenericController):
                 create_new_copies=(not overwrite),
             )
 
-    def dump(
-        self,
-        *types: str,
-        data_directory: os.PathLike = None,
-    ):
+    def dump(self, *types: str, data_directory: os.PathLike = None, **kwargs):
         known_types = {t["name"] for t in self.types()["types"]}
 
         types = set(types) if types else known_types

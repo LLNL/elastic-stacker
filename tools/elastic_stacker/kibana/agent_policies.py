@@ -38,10 +38,15 @@ class AgentPolicyController(FleetAPIController):
         pass
 
     # TODO
-    def load(self, data_directory: os.PathLike = None):
+    def load(self, data_directory: os.PathLike = None, **kwargs):
         pass
 
-    def dump(self, include_managed: bool = False, data_directory: os.PathLike = None):
+    def dump(
+        self,
+        include_managed: bool = False,
+        data_directory: os.PathLike = None,
+        **kwargs
+    ):
         working_directory = self._get_working_dir(data_directory, create=True)
 
         for policy in self._depaginate(self.get):

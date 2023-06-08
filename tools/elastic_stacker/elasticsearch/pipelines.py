@@ -51,6 +51,7 @@ class PipelineController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
+        **kwargs,
     ):
         working_directory = self._get_working_dir(data_directory, create=True)
         pipelines = self.get()
@@ -64,6 +65,7 @@ class PipelineController(ElasticsearchAPIController):
         self,
         data_directory: os.PathLike = None,
         delete_after_import: bool = False,
+        **kwargs,
     ):
         working_directory = self._get_working_dir(data_directory, create=False)
         if working_directory.is_dir():

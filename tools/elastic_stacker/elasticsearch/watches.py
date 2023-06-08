@@ -35,13 +35,10 @@ class WatchController(ElasticsearchAPIController):
         pass
 
     # TODO
-    def load():
+    def load(self, **kwargs):
         pass
 
-    def dump(
-        self,
-        data_directory: os.PathLike = None,
-    ):
+    def dump(self, data_directory: os.PathLike = None, **kwargs):
         working_directory = self._get_working_dir(data_directory, create=True)
         for watch in self._depaginate(self.query, "watches", page_size=10):
             file_path = working_directory / (watch["_id"] + ".json")
