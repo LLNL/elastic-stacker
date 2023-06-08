@@ -43,8 +43,14 @@ class Stacker:
             global_config, profile_name=profile, overrides=overrides
         )
 
-        self._elasticsearch_client = APIClient(**self.profile["elasticsearch"])
+        # https://www.elastic.co/guide/en/kibana/master/api.html#api-request-headers
+        self.profile["kibana"]["headers"] = self.profile["kibana"].get(
+            "headers", {}
+        ) | {"kbn-xsrf": "true"}
+
         self._kibana_client = APIClient(**self.profile["kibana"])
+
+        self._elasticsearch_client = APIClient(**self.profile["elasticsearch"])
 
         self.saved_objects = SavedObjectController(self._kibana_client)
         self.agent_policies = AgentPolicyController(self._kibana_client)
