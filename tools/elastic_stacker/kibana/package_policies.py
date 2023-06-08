@@ -17,14 +17,16 @@ class PackagePolicyController(FleetAPIController):
     def _build_endpoint(self, id: str):
         return self._base_endpoint if not id else self._base_endpoint + "/" + id
 
-    def get(self, ids: str = None, perPage: int = None, page: int = None):
+    def get(self, id: str = None, perPage: int = None, page: int = None):
         """
         page and perPage are actually not documented at all in the API docs...:man_facepalming:
         But, this *is* a paginated API, and it works the same way as agent_policies (where the
         pagination is documented properly.)
         """
         endpoint = self._build_endpoint(id)
-        response = self._client.get(endpoint)
+        query_params = {"page": page, "perPage": perPage}
+        query_params = self._clean_params(query_params)
+        response = self._client.get(endpoint, params=query_params)
         return response.json()
 
     def create(self, id: str, policy: dict):
