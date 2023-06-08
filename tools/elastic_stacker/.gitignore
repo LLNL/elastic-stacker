@@ -1,8 +1,8 @@
 # has credentials in it
-kibanaio.toml
+*stacker.y*ml
 
 # whole bunch of files we don't want to commit
-export/
+stacker_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
