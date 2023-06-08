@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 from pathlib import Path
 
 from utils.controller import GenericController
@@ -37,9 +38,12 @@ class WatchController(GenericController):
     def load():
         pass
 
-    def dump(self):
-        self._create_working_dir()
+    def dump(
+        self,
+        data_directory: os.PathLike = None,
+    ):
+        working_directory = self._get_working_dir(data_directory, create=True)
         for watch in self._depaginate(self.query, "watches", page_size=10):
-            file_path = self._working_directory / (watch["_id"] + ".json")
+            file_path = working_directory / (watch["_id"] + ".json")
             with file_path.open("w") as file:
                 file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))

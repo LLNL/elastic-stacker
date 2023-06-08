@@ -1,10 +1,10 @@
+import os
 import logging
 import json
-from pathlib import Path
 import typing
 import tempfile
-import httpx
 
+import httpx
 from slugify import slugify
 
 from utils.controller import GenericController
@@ -17,10 +17,10 @@ class SavedObjectController(GenericController):
 
     def types(self):
         """
-        Returns the types of saved objects the current user ahs the ability to export.
+        Returns the types of saved objects the current user has the ability to export.
         This isn't in the docs (it's only used internally by Kibana) so it might break without warning.
         """
-        response = self.client.get(
+        response = self._client.get(
             "/api/kibana/management/saved_objects/_allowed_types"
         )
         return response.json()
@@ -65,16 +65,16 @@ class SavedObjectController(GenericController):
 
     def export(self, *args, **kwargs) -> bytes:
         endpoint, post_body = self._raw_export_objects(*args, **kwargs)
-        return self.client.post(endpoint, json=post_body).content
+        return self._client.post(endpoint, json=post_body).content
 
     # TODO: type hinting is not working properly on the output of this function
-    def export_stream(self, *args, **kwargs) -> typing.Iterator[httpx.Response]:
+    def _export_stream(self, *args, **kwargs) -> typing.Iterator[httpx.Response]:
         """
         Saved object exports can get extremely large; we can handle large exports by making a single export request
         and streaming the response back line by line to be written to disk.
         """
         endpoint, post_body = self._raw_export_objects(*args, **kwargs)
-        return self.client.stream("POST", endpoint, json=post_body)
+        return self._client.stream("POST", endpoint, json=post_body)
 
     def import_objects(
         self,
@@ -107,7 +107,7 @@ class SavedObjectController(GenericController):
 
         files = {"file": (upload_filename, file, "application/ndjson")}
 
-        response = self.client.post(endpoint, params=query_params, files=files)
+        response = self._client.post(endpoint, params=query_params, files=files)
         return response.json()
 
     def load(
@@ -116,14 +116,18 @@ class SavedObjectController(GenericController):
         overwrite: bool = True,
         delete_after_import: bool = False,
         allow_failure: bool = False,
+        data_directory: os.PathLike = None,
     ):
         # We could just iterate over all the files and POST them all individually,
         # but that'd be awful slow, so we can instead send them all as one batch
         # by first concatenating them into this temporary file-like object in memory.
+
+        working_directory = self._get_working_dir(data_directory, create=False)
+
         with tempfile.SpooledTemporaryFile(
             mode="ab+", max_size=intermediate_file_max_size
         ) as intermediate_file:
-            for object_file in self._working_directory.glob("*/*.json"):
+            for object_file in working_directory.glob("*/*.json"):
                 with object_file.open("rb") as fh:
                     # kibana doesn't like the pretty-printing,
                     # so we have to flatten it down one line each.
@@ -139,22 +143,27 @@ class SavedObjectController(GenericController):
                 create_new_copies=(not overwrite),
             )
 
-    def dump(self, *types: str):
+    def dump(
+        self,
+        *types: str,
+        data_directory: os.PathLike = None,
+    ):
         known_types = {t["name"] for t in self.types()["types"]}
 
-        types = set(types) if types is not None else known_types
+        types = set(types) if types else known_types
 
         invalid_types = types.difference(known_types)
         assert not invalid_types, "Invalid types: {}. Valid types include: {}".format(
             invalid_types, known_types
         )
 
-        self._create_working_dir()
+        working_directory = self._get_working_dir(data_directory, create=True)
+
         for obj_type in types:
-            obj_type_output_dir = self.resource_directory / obj_type
+            obj_type_output_dir = working_directory / obj_type
             obj_type_output_dir.mkdir(parents=True, exist_ok=True)
 
-        with self.export_stream(
+        with self._export_stream(
             types=types, exclude_export_details=True, stream=True
         ) as export_stream:
             for line in export_stream.iter_lines():
@@ -167,6 +176,6 @@ class SavedObjectController(GenericController):
                     "title", attrs.get("name", obj.get("id", "NO_NAME"))
                 )
                 file_name = slugify(obj_name) + ".json"
-                output_file = self._working_directory / obj["type"] / file_name
+                output_file = working_directory / obj["type"] / file_name
                 with output_file.open("w") as fh:
                     json.dump(obj, fh, indent=4, sort_keys=True)

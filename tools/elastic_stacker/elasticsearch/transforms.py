@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 from pathlib import Path
 
 from utils.controller import GenericController
@@ -168,9 +169,13 @@ class TransformController(GenericController):
         response = self._client.post(endpoint, json=transform, params=query_params)
         return response.json()
 
-    def load(self, data_directory: Path, delete_after_import: bool = False):
-        transforms_directory = data_directory / self._resource_directory
-        if transforms_directory.is_dir():
+    def load(
+        self,
+        delete_after_import: bool = False,
+        data_directory: os.PathLike = None,
+    ):
+        working_directory = self._get_working_dir(data_directory, create=False)
+        if working_directory.is_dir():
             # create a map of all transforms by id
             transforms_generator = self._depaginate(
                 self.get, key="transforms", page_size=100
@@ -180,7 +185,7 @@ class TransformController(GenericController):
                 transform["id"]: transform for transform in transforms_generator
             }
 
-            stats_file = transforms_directory / "_stats.json"
+            stats_file = working_directory / "_stats.json"
             with stats_file.open("r") as fh:
                 reference_stats = json.load(fh)
 
@@ -189,7 +194,7 @@ class TransformController(GenericController):
                 for t in self._depaginate(self.stats, "transforms", page_size=100)
             }
 
-            for transform_file in transforms_directory.glob("*.json"):
+            for transform_file in working_directory.glob("*.json"):
                 if transform_file == stats_file:
                     continue
                 logger.debug("Loading {}".format(transform_file))
@@ -222,15 +227,16 @@ class TransformController(GenericController):
     def dump(
         self,
         include_managed: bool = False,
+        data_directory: os.PathLike = None,
     ):
-        self._create_working_dir()
+        working_directory = self._get_working_dir(data_directory, create=True)
         for transform in self._depaginate(self.get, key="transforms", page_size=100):
             if include_managed or not transform.get("_meta", {}).get("managed"):
                 # trim off keys that can't be reimported
                 for key in ["authorization", "version", "create_time"]:
                     if key in transform:
                         transform.pop(key)
-                file_path = self._working_directory / (transform.pop("id") + ".json")
+                file_path = working_directory / (transform.pop("id") + ".json")
                 with file_path.open("w") as file:
                     file.write(json.dumps(transform, indent=4, sort_keys=True))
 
@@ -238,6 +244,6 @@ class TransformController(GenericController):
         stats = {}
         for transform in self._depaginate(self.stats, key="transforms", page_size=100):
             stats[transform["id"]] = transform
-        transform_stats_file = self._working_directory / "_stats.json"
+        transform_stats_file = working_directory / "_stats.json"
         with transform_stats_file.open("w") as file:
             file.write(json.dumps(stats, indent=4, sort_keys=True))

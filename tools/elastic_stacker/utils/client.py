@@ -15,8 +15,10 @@ class APIClient(httpx.Client):
             response.read()
             response_doc = response.json()
             error = response_doc.get("error")
-            if error:
+            if isinstance(error, dict) and "type" in error and "reason" in error:
                 reason = "'{type}: {reason}'".format(**error)
+            elif isinstance(error, str):
+                reason = error
             else:
                 reason = "{} {}".format(response.status_code, response.reason_phrase)
 

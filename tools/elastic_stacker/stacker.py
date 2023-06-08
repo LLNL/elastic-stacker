@@ -3,6 +3,7 @@
 # stdlib
 import json
 from pathlib import Path
+import tempfile
 
 # PyPI
 import fire
@@ -18,6 +19,7 @@ from elasticsearch.enrich_policies import EnrichPolicyController
 
 from utils.config import load_config, make_profile
 from utils.client import APIClient
+from utils.controller import GenericController
 
 
 class Stacker:
@@ -25,18 +27,17 @@ class Stacker:
         self,
         config: str = None,
         profile: str = None,
-        data_directory=None,
         elasticsearch: str = None,
         kibana: str = None,
         ca: str = None,
     ):
         global_config = load_config(config)  # if None, checks list of default locations
+
         overrides = {
             # TODO: add CLI arguments here to override configuration values, for example
             "elasticsearch": {"base_url": elasticsearch},
             "kibana": {"base_url": kibana},
             "client": {"verify": ca},
-            "io": {"data_directory": data_directory},
         }
 
         self.profile = make_profile(
@@ -62,7 +63,32 @@ class Stacker:
             elasticsearch_client, data_directory
         )
 
-    def nop(self):
+    def _members_with_method(self, name: str):
+        return {
+            name: obj
+            for name, obj in self.__dict__.items()
+            if hasattr(obj, name) and callable(getattr(obj, name))
+        }
+
+    def system_dump(self, *types: str, include_managed: bool = True):
+        # find every object that's part of self which has a method called dump
+        dumpables = self._members_with_method("dump")
+        invalid_types = set(types).difference(set(dumpables))
+        if invalid_types:
+            raise Exception
+        if len(types) is None:
+            types = dumpables
+
+        for type_name in types:
+            controller = getattr(self, type)
+            controller.dump(**kwargs)
+
+    def system_load(
+        self,
+        temp: bool = True,
+        delete: bool = True,
+        retries: bool = True,
+    ):
         pass
 
 

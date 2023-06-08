@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 from pathlib import Path
 
 from utils.controller import GenericController
@@ -31,11 +32,11 @@ class EnrichPolicyController(GenericController):
                 logger.warn(response_data["reason"])
         return response_data
 
-    def dump(self):
-        self._create_working_dir()
+    def dump(self, data_directory: os.PathLike = None):
+        working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self.get()["policies"]:
             filename = policy["config"]["match"]["name"] + ".json"
-            policy_file = self._working_directory / filename
+            policy_file = working_directory / filename
             policy = policy["config"]
             policy["match"].pop("name")
             with policy_file.open("w") as fh:
@@ -43,10 +44,13 @@ class EnrichPolicyController(GenericController):
 
     def load(
         self,
+        data_directory: os.PathLike = None,
         allow_failure: bool = False,
         delete_after_import: bool = False,
     ):
-        if self._working_directory.is_dir():
+        working_directory = self._get_working_dir(data_directory, create=True)
+
+        if working_directory.is_dir():
             for policy_file in self._working_directory.glob("*.json"):
                 with policy_file.open("r") as fh:
                     policy = json.load(fh)

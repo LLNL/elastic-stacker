@@ -1,5 +1,6 @@
 import logging
 import json
+import os
 from pathlib import Path
 
 from slugify import slugify
@@ -37,17 +38,15 @@ class AgentPolicyController(GenericController):
         pass
 
     # TODO
-    def load(self):
+    def load(self, data_directory: os.PathLike = None):
         pass
 
-    def dump(
-        self,
-        include_managed: bool = False,
-    ):
-        self._create_working_dir()
+    def dump(self, include_managed: bool = False, data_directory: os.PathLike = None):
+        working_directory = self._get_working_dir(data_directory, create=True)
+
         for policy in self._depaginate(self.get, key="items"):
             if include_managed or not policy["is_managed"]:
                 filename = slugify(policy["name"]) + ".json"
-                file_path = self._working_directory / filename
+                file_path = working_directory / filename
                 with file_path.open("w") as file:
                     file.write(json.dumps(policy, indent=4, sort_keys=True))
