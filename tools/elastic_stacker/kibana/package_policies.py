@@ -4,12 +4,12 @@ from pathlib import Path
 
 from slugify import slugify
 
-from .generic import GenericKibanaController
+from utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class PackagePolicyController(GenericKibanaController):
+class PackagePolicyController(GenericController):
     _base_endpoint = "/api/fleet/package_policies"
     _resource_directory = "package_policies"
 

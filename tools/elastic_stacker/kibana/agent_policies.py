@@ -4,12 +4,12 @@ from pathlib import Path
 
 from slugify import slugify
 
-from .generic import GenericKibanaController
+from utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class AgentPolicyController(GenericKibanaController):
+class AgentPolicyController(GenericController):
     _base_endpoint = "/api/fleet/agent_policies"
     _resource_directory = "agent_policies"
 
@@ -45,7 +45,7 @@ class AgentPolicyController(GenericKibanaController):
         include_managed: bool = False,
     ):
         self._create_working_dir()
-        for policy in self._depaginate(self.get):
+        for policy in self._depaginate(self.get, key="items"):
             if include_managed or not policy["is_managed"]:
                 filename = slugify(policy["name"]) + ".json"
                 file_path = self._working_directory / filename

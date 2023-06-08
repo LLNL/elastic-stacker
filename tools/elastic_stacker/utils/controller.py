@@ -2,9 +2,8 @@ import httpx
 from pathlib import Path
 
 
-class GenericElasticsearchController:
+class GenericController:
     _client: httpx.Client
-    _working_directory: Path
 
     def __init__(
         self,

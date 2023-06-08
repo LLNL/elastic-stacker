@@ -7,12 +7,12 @@ import httpx
 
 from slugify import slugify
 
-from .generic import GenericKibanaController
+from utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class SavedObjectController(GenericKibanaController):
+class SavedObjectController(GenericController):
     resource_directory = "saved_objects"
 
     def types(self):

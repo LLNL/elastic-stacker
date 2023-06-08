@@ -8,16 +8,19 @@ from pathlib import Path
 import fire
 
 # local project
-from kibana import KibanaController
-from elasticsearch import ElasticsearchController
+from kibana.saved_objects import SavedObjectController
+from kibana.agent_policies import AgentPolicyController
+from kibana.package_policies import PackagePolicyController
+from elasticsearch.pipelines import PipelineController
+from elasticsearch.transforms import TransformController
+from elasticsearch.watches import WatchController
+from elasticsearch.enrich_policies import EnrichPolicyController
+
 from utils.config import load_config, make_profile
 from utils.client import APIClient
 
 
 class Stacker:
-    elasticsearch: ElasticsearchController
-    kibana: KibanaController
-
     def __init__(
         self,
         config: str = None,
@@ -39,17 +42,17 @@ class Stacker:
         self.profile = make_profile(
             global_config, profile_name=profile, overrides=overrides
         )
+
         self._elasticsearch_client = APIClient(**self.profile["elasticsearch"])
         self._kibana_client = APIClient(**self.profile["kibana"])
 
-        self.elasticsearch = ElasticsearchController(self._elasticsearch_client)
-        self.kibana = KibanaController(self._kibana_client)
-        # steal the attrs from the controllers so we can do
-        # "stacker.py watches dump" instead of "stacker.py elasticsearch watches dump"
-        # for controller in (self._elasticsearch, self._kibana):
-        #     for name, attr in controller.__dict__.items():
-        #         if not name.startswith("_"):
-        #             self.__setattr__(name, attr)
+        self.saved_objects = SavedObjectController(self._kibana_client)
+        self.agent_policies = AgentPolicyController(self._kibana_client)
+        self.package_policies = PackagePolicyController(self._kibana_client)
+        self.pipelines = PipelineController(self._elasticsearch_client)
+        self.transforms = TransformController(self._elasticsearch_client)
+        self.watches = WatchController(self._elasticsearch_client)
+        self.enrich_policies = EnrichPolicyController(self._elasticsearch_client)
 
     def nop(self):
         pass

@@ -2,12 +2,12 @@ import logging
 import json
 from pathlib import Path
 
-from .generic import GenericElasticsearchController
+from utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class WatchController(GenericElasticsearchController):
+class WatchController(GenericController):
     _resource_directory = "watches"
 
     def query(
