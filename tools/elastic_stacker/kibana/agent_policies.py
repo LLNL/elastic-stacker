@@ -5,12 +5,12 @@ from pathlib import Path
 
 from slugify import slugify
 
-from utils.controller import GenericController
+from utils.controller import FleetAPIController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class AgentPolicyController(GenericController):
+class AgentPolicyController(FleetAPIController):
     _base_endpoint = "/api/fleet/agent_policies"
     _resource_directory = "agent_policies"
 
@@ -44,7 +44,7 @@ class AgentPolicyController(GenericController):
     def dump(self, include_managed: bool = False, data_directory: os.PathLike = None):
         working_directory = self._get_working_dir(data_directory, create=True)
 
-        for policy in self._depaginate(self.get, key="items"):
+        for policy in self._depaginate(self.get):
             if include_managed or not policy["is_managed"]:
                 filename = slugify(policy["name"]) + ".json"
                 file_path = working_directory / filename

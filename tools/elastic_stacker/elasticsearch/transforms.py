@@ -3,12 +3,12 @@ import json
 import os
 from pathlib import Path
 
-from utils.controller import GenericController
+from utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class TransformController(GenericController):
+class TransformController(ElasticsearchAPIController):
     _base_endpoint = "_transform"
     _resource_directory = "transforms"
 

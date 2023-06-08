@@ -3,12 +3,12 @@ import json
 import os
 from pathlib import Path
 
-from utils.controller import GenericController
+from utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class EnrichPolicyController(GenericController):
+class EnrichPolicyController(ElasticsearchAPIController):
     _resource_directory = "enrich_policies"
 
     def _build_endpoint(self, *names: str) -> str:

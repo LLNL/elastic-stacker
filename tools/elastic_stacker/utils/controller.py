@@ -17,21 +17,6 @@ class GenericController:
         self._client = client
         self._default_data_directory = data_directory
 
-    def _depaginate(self, method, key, page_size=10):
-        """
-        Elasticsearch presents some of its APIs paginated, so rather than dump all of them
-        in one request we can turn that pagination into a nice, Pythonic generator.
-        """
-        offset = 0
-        results = {"count": float("inf")}
-        while offset < results["count"]:
-            # Kibana's paginated APIs don't use "offset"; I should change
-            # the function signature for those methods to retain consistency.
-            results = method(offset=offset, size=page_size)
-            for result in results[key]:
-                offset += 1
-                yield result
-
     def _clean_params(self, params: dict):
         # httpx includes query parameters even if their value is None
         # (see https://www.python-httpx.org/compatibility/#query-parameters).
@@ -52,3 +37,34 @@ class GenericController:
             working_directory.mkdir(parents=True, exist_ok=True)
 
         return working_directory
+
+
+class ElasticsearchAPIController(GenericController):
+    def _depaginate(self, method, key, page_size=10, **kwargs):
+        """
+        Elasticsearch presents some of its APIs paginated, so rather than dump all of them
+        in one request we can turn that pagination into a nice, Pythonic generator.
+        """
+        offset = 0
+        results = {"count": float("inf")}
+        while offset < results["count"]:
+            results = method(offset=offset, size=page_size, **kwargs)
+            for result in results[key]:
+                offset += 1
+                yield result
+
+
+class FleetAPIController(GenericController):
+    def _depaginate(self, method, perPage: int = None, **kwargs):
+        """
+        Fleet Server has paginated APIs too, but where Elasticsearch accepts
+        an offset parameter ("from"), Fleet accepts only a page number,
+        so the pagination logic has to be a little different.
+        """
+        page = 1
+        results = {"items": True}
+        while results["items"]:  # returns the empty list when complete
+            results = method(page=page, perPage=perPage, **kwargs)
+            for result in results["items"]:
+                yield result
+            page += 1

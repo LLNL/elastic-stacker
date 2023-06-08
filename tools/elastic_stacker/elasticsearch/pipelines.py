@@ -3,12 +3,12 @@ import json
 import os
 from pathlib import Path
 
-from utils.controller import GenericController
+from utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
 
 
-class PipelineController(GenericController):
+class PipelineController(ElasticsearchAPIController):
     _base_endpoint = "_ingest/pipeline"
     _resource_directory = "pipelines"
 
