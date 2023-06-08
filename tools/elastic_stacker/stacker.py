@@ -1,9 +1,10 @@
 #! /bin/env python3
 
 # stdlib
+import logging
 import json
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 # PyPI
 import fire
@@ -20,6 +21,8 @@ from elasticsearch.enrich_policies import EnrichPolicyController
 from utils.config import load_config, make_profile
 from utils.client import APIClient
 from utils.controller import GenericController
+
+logger = logging.getLogger("elastic_stacker")
 
 
 class Stacker:
@@ -63,11 +66,11 @@ class Stacker:
             elasticsearch_client, data_directory
         )
 
-    def _members_with_method(self, name: str):
+    def _members_with_method(self, method_name: str):
         return {
             name: obj
             for name, obj in self.__dict__.items()
-            if hasattr(obj, name) and callable(getattr(obj, name))
+            if hasattr(obj, method_name) and callable(getattr(obj, method_name))
         }
 
     def system_dump(self, *types: str, include_managed: bool = True):
@@ -75,13 +78,16 @@ class Stacker:
         dumpables = self._members_with_method("dump")
         invalid_types = set(types).difference(set(dumpables))
         if invalid_types:
-            raise Exception
-        if len(types) is None:
-            types = dumpables
+            raise Exception()
+        if len(types) == 0:
+            types = dumpables.keys()
+
+        dump_arguments = {"include_managed": include_managed}
 
         for type_name in types:
-            controller = getattr(self, type)
-            controller.dump(**kwargs)
+            logger.warn("exporting {}".format(type_name))
+            controller = getattr(self, type_name)
+            controller.dump(**dump_arguments)
 
     def system_load(
         self,
