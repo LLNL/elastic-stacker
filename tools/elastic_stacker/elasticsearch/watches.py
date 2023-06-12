@@ -35,7 +35,9 @@ class WatchController(ElasticsearchAPIController):
         pass
 
     # TODO
-    def load(self, allow_failure: bool = True, **kwargs):
+    def load(
+        self, allow_failure: bool = True, delete_after_import: bool = False, **kwargs
+    ):
         pass
 
     def dump(self, data_directory: os.PathLike = None, **kwargs):

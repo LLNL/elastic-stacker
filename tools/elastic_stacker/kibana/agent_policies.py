@@ -39,7 +39,11 @@ class AgentPolicyController(FleetAPIController):
 
     # TODO
     def load(
-        self, data_directory: os.PathLike = None, allow_failure: bool = False, **kwargs
+        self,
+        data_directory: os.PathLike = None,
+        allow_failure: bool = False,
+        delete_after_import: bool = False,
+        **kwargs,
     ):
         pass
 
@@ -47,7 +51,7 @@ class AgentPolicyController(FleetAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs
+        **kwargs,
     ):
         working_directory = self._get_working_dir(data_directory, create=True)
 

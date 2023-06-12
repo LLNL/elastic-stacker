@@ -70,6 +70,9 @@ class PackagePolicyController(FleetAPIController):
                     )
                 else:
                     raise e
+            else:
+                if delete_after_import:
+                    policy_file.unlink()
 
     def dump(self, data_directory: os.PathLike = None, **kwargs):
         working_directory = self._get_working_dir(data_directory, create=True)

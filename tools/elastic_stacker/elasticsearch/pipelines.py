@@ -85,3 +85,6 @@ class PipelineController(ElasticsearchAPIController):
                         )
                     else:
                         raise e
+                else:
+                    if delete_after_import:
+                        pipeline_file.unlink()

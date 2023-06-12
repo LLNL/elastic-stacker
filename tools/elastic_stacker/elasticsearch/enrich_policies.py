@@ -2,6 +2,7 @@ import logging
 import json
 import os
 from pathlib import Path
+import shutil
 
 from httpx import HTTPStatusError
 
@@ -75,3 +76,6 @@ class EnrichPolicyController(ElasticsearchAPIController):
                         )
                     else:
                         raise e
+                else:
+                    if delete_after_import:
+                        policy_file.unlink()

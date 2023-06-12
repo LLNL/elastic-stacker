@@ -241,6 +241,9 @@ class TransformController(ElasticsearchAPIController):
                         )
                     else:
                         raise e
+                else:
+                    if delete_after_import:
+                        transform_file.unlink()
 
     def dump(
         self,

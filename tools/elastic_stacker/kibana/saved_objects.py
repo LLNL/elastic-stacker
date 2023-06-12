@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import shutil
 import typing
 import tempfile
 
@@ -151,6 +152,9 @@ class SavedObjectController(GenericController):
                     )
                 else:
                     raise e
+            else:
+                if delete_after_import:
+                    shutil.rmtree(working_directory)
 
     def dump(self, *types: str, data_directory: os.PathLike = None, **kwargs):
         known_types = {t["name"] for t in self.types()["types"]}
