@@ -138,11 +138,19 @@ class SavedObjectController(GenericController):
                     intermediate_file.write(b"\n")
             # jump back to the start of the file buffer
             intermediate_file.seek(0)
-            self.import_objects(
-                intermediate_file,
-                overwrite=overwrite,
-                create_new_copies=(not overwrite),
-            )
+            try:
+                self.import_objects(
+                    intermediate_file,
+                    overwrite=overwrite,
+                    create_new_copies=(not overwrite),
+                )
+            except httpx.HTTPStatusError as e:
+                if allow_failure:
+                    logger.info(
+                        "Experienced an error; continuing because allow_failure is True"
+                    )
+                else:
+                    raise e
 
     def dump(self, *types: str, data_directory: os.PathLike = None, **kwargs):
         known_types = {t["name"] for t in self.types()["types"]}

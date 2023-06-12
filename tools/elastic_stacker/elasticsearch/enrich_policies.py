@@ -66,4 +66,12 @@ class EnrichPolicyController(ElasticsearchAPIController):
                 with policy_file.open("r") as fh:
                     policy = json.load(fh)
                 policy_name = policy_file.stem
-                self.create(policy_name, policy)
+                try:
+                    self.create(policy_name, policy)
+                except HTTPStatusError as e:
+                    if allow_failure:
+                        logger.info(
+                            "Experienced an error; continuing because allow_failure is True"
+                        )
+                else:
+                    raise e

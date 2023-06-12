@@ -38,7 +38,9 @@ class AgentPolicyController(FleetAPIController):
         pass
 
     # TODO
-    def load(self, data_directory: os.PathLike = None, **kwargs):
+    def load(
+        self, data_directory: os.PathLike = None, allow_failure: bool = False, **kwargs
+    ):
         pass
 
     def dump(

@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 
+from httpx import HTTPStatusError
+
 from utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
@@ -172,6 +174,7 @@ class TransformController(ElasticsearchAPIController):
     def load(
         self,
         delete_after_import: bool = False,
+        allow_failure: bool = True,
         data_directory: os.PathLike = None,
         **kwargs
     ):
@@ -202,28 +205,42 @@ class TransformController(ElasticsearchAPIController):
                 transform_id = transform_file.stem
                 with transform_file.open("r") as fh:
                     loaded_transform = json.load(fh)
-                if transform_id in transforms_map:
-                    logger.info("Transform {} already exists.".format(transform_id))
-                    # the transform already exists; if it's changed we need to delete and recreate it
-                    existing_transform = transforms_map[transform_id]
-                    for key, loaded_value in loaded_transform.items():
-                        if loaded_value != existing_transform[key]:
-                            logger.info(
-                                "Transform {} differs by key {}, deleting and recreating.".format(
-                                    transform_id, key
+                try:
+                    if transform_id in transforms_map:
+                        logger.info("Transform {} already exists.".format(transform_id))
+                        # the transform already exists; if it's changed we need to delete and recreate it
+                        existing_transform = transforms_map[transform_id]
+                        for key, loaded_value in loaded_transform.items():
+                            if loaded_value != existing_transform[key]:
+                                logger.info(
+                                    "Transform {} differs by key {}, deleting and recreating.".format(
+                                        transform_id, key
+                                    )
                                 )
+                                self.stop(transform_id, wait_for_completion=True)
+                                self.delete(transform_id)
+                                self.create(
+                                    transform_id,
+                                    loaded_transform,
+                                    defer_validation=True,
+                                )
+                                break
+                    else:
+                        logger.info(
+                            "Creating new transform with id {}".format(
+                                transform_id, key
                             )
-                            self.stop(transform_id, wait_for_completion=True)
-                            self.delete(transform_id)
-                            self.create(
-                                transform_id, loaded_transform, defer_validation=True
-                            )
-                            break
+                        )
+                        self.create(
+                            transform_id, loaded_transform, defer_validation=True
+                        )
+                except HTTPStatusError as e:
+                    if allow_failure:
+                        logger.info(
+                            "Experienced an error; continuing because allow_failure is True"
+                        )
                 else:
-                    logger.info(
-                        "Creating new transform with id {}".format(transform_id, key)
-                    )
-                    self.create(transform_id, loaded_transform, defer_validation=True)
+                    raise e
 
     def dump(
         self,

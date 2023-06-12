@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 
+from httpx import HTTPStatusError
+
 from utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
@@ -65,6 +67,7 @@ class PipelineController(ElasticsearchAPIController):
         self,
         data_directory: os.PathLike = None,
         delete_after_import: bool = False,
+        allow_failure: bool = False,
         **kwargs,
     ):
         working_directory = self._get_working_dir(data_directory, create=False)
@@ -73,4 +76,12 @@ class PipelineController(ElasticsearchAPIController):
                 with pipeline_file.open("r") as fh:
                     pipeline = json.load(fh)
                 pipeline_id = pipeline_file.stem
-                self.create(pipeline_id, pipeline)
+                try:
+                    self.create(pipeline_id, pipeline)
+                except HTTPStatusError as e:
+                    if allow_failure:
+                        logger.info(
+                            "Experienced an error; continuing because allow_failure is True"
+                        )
+                else:
+                    raise e

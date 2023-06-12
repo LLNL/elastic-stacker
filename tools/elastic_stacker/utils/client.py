@@ -14,13 +14,18 @@ class APIClient(httpx.Client):
         if not response.is_success:
             response.read()
             response_doc = response.json()
-            error = response_doc.get("error")
-            if isinstance(error, dict) and "type" in error and "reason" in error:
-                reason = "'{type}: {reason}'".format(**error)
-            elif isinstance(error, str):
-                reason = error
+            if "message" in response_doc:
+                reason = response_doc["message"]
+            elif "error" in response_doc:
+                error = response_doc.get("error")
+                if isinstance(response_doc.get("error"), dict):
+                    if "type" in error and "reason" in error:
+                        reason = "'{type}: {reason}'".format(**error)
+                elif isinstance(error, str):
+                    reason = error
             else:
                 reason = "{} {}".format(response.status_code, response.reason_phrase)
+            reason = " ".join(reason.splitlines())
 
             logger.error(
                 "Request to {method} {url} failed: {reason}".format(
