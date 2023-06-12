@@ -83,5 +83,5 @@ class PipelineController(ElasticsearchAPIController):
                         logger.info(
                             "Experienced an error; continuing because allow_failure is True"
                         )
-                else:
-                    raise e
+                    else:
+                        raise e

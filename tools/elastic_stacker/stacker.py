@@ -80,25 +80,23 @@ class Stacker:
         self.enrich_policies = EnrichPolicyController(
             elasticsearch_client, self._data_directory
         )
-        self._controllers = [
-            # self.package_policies,
-            self.saved_objects,
-            self.agent_policies,
-            self.watches,
-            self.pipelines,
-            self.transforms,
-            self.watches,
-            self.enrich_policies,
-        ]
+        self._controllers = {
+            # "package_policies": self.package_policies,
+            "saved_objects": self.saved_objects,
+            "agent_policies": self.agent_policies,
+            "watches": self.watches,
+            "pipelines": self.pipelines,
+            "transforms": self.transforms,
+            "watches": self.watches,
+            "enrich_policies": self.enrich_policies,
+        }
 
     def system_dump(self, *types: str, include_managed: bool = True):
-        # find every object that's part of self which has a method called dump
-        dumpables = self._members_with_method("dump")
-        invalid_types = set(types).difference(set(dumpables))
+        invalid_types = set(types).difference(set(self._controllers.keys()))
         if invalid_types:
             raise Exception("types {} are invalid".format(invalid_types))
         if len(types) == 0:
-            types = dumpables.keys()
+            types = self._controllers.keys()
 
         dump_arguments = {"include_managed": include_managed}
 
@@ -112,24 +110,23 @@ class Stacker:
         *types,
         temp: bool = False,
         data_directory: os.PathLike = None,
-        delete: bool = False,
+        delete_after_import: bool = False,
         retries: int = 0,
         allow_failure: bool = False,
         stubborn: bool = False
     ):
         if stubborn:
-            delete = True
+            delete_after_import = True
             temp = True
             allow_failure = True
             if retries is not None:
                 retries = 5
 
-        loadables = self._members_with_method("load")
-        invalid_types = set(types).difference(set(loadables))
+        invalid_types = set(types).difference(set(self._controllers.keys()))
         if invalid_types:
             raise Exception("types {} are invalid".format(invalid_types))
         if len(types) == 0:
-            types = loadables.keys()
+            types = self._controllers.keys()
 
         if data_directory is None:
             data_directory = self._data_directory
@@ -143,6 +140,7 @@ class Stacker:
         load_arguments = {
             "allow_failure": allow_failure,
             "data_directory": working_data_directory,
+            "delete_after_import": delete_after_import,
         }
 
         for type_name in types:

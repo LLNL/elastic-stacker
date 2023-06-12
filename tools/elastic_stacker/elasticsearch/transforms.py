@@ -228,7 +228,7 @@ class TransformController(ElasticsearchAPIController):
                     else:
                         logger.info(
                             "Creating new transform with id {}".format(
-                                transform_id, key
+                                transform_id, loaded_transform
                             )
                         )
                         self.create(
@@ -239,8 +239,8 @@ class TransformController(ElasticsearchAPIController):
                         logger.info(
                             "Experienced an error; continuing because allow_failure is True"
                         )
-                else:
-                    raise e
+                    else:
+                        raise e
 
     def dump(
         self,
