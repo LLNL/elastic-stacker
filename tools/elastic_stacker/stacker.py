@@ -133,7 +133,7 @@ class Stacker:
 
         if temp:
             working_data_directory = tempfile.mkdtemp(prefix="stacker_data_")
-            shutil.copytree(data_directory, working_data_directory)
+            shutil.copytree(data_directory, working_data_directory, dirs_exist_ok=True)
         else:
             working_data_directory = data_directory
 
@@ -142,11 +142,11 @@ class Stacker:
             "data_directory": working_data_directory,
             "delete_after_import": delete_after_import,
         }
-
-        for type_name in types:
-            logger.warning("importing {}".format(type_name))
-            controller = getattr(self, type_name)
-            controller.load(**load_arguments)
+        for i in range(retries + 1):
+            for type_name in types:
+                logger.warning("importing {}".format(type_name))
+                controller = getattr(self, type_name)
+                controller.load(**load_arguments)
 
 
 def main():
