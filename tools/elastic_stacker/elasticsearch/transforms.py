@@ -174,7 +174,7 @@ class TransformController(ElasticsearchAPIController):
     def load(
         self,
         delete_after_import: bool = False,
-        allow_failure: bool = True,
+        allow_failure: bool = False,
         data_directory: os.PathLike = None,
         **kwargs
     ):
