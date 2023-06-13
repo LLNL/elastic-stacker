@@ -126,6 +126,9 @@ class SavedObjectController(GenericController):
 
         working_directory = self._get_working_dir(data_directory, create=False)
 
+        if not working_directory.exists():
+            return
+
         with tempfile.SpooledTemporaryFile(
             mode="ab+", max_size=intermediate_file_max_size
         ) as intermediate_file:
