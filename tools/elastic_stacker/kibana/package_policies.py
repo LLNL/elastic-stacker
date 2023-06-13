@@ -56,6 +56,7 @@ class PackagePolicyController(FleetAPIController):
         data_directory: os.PathLike = None,
         **kwargs
     ):
+        raise NotImplementedError()
         working_directory = self._get_working_dir(data_directory, create=False)
         for policy_file in working_directory.glob("*.json"):
             with policy_file.open("r") as fh:
