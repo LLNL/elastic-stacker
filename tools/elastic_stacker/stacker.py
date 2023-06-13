@@ -65,24 +65,20 @@ class Stacker:
         self.profile["kibana"]["headers"] = self.profile["kibana"].get(
             "headers", {}
         ) | {"kbn-xsrf": "true"}
+        self._options = self.profile["options"]
 
         kibana_client = APIClient(**self.profile["kibana"])
         elasticsearch_client = APIClient(**self.profile["elasticsearch"])
-        self._data_directory = self.profile["io"]["data_directory"]
 
-        self.package_policies = PackagePolicyController(
-            kibana_client, self._data_directory
-        )
-        self.agent_policies = AgentPolicyController(kibana_client, self._data_directory)
-        self.indices = IndexController(elasticsearch_client, self._data_directory)
-        self.saved_objects = SavedObjectController(kibana_client, self._data_directory)
-        self.pipelines = PipelineController(elasticsearch_client, self._data_directory)
-        self.transforms = TransformController(
-            elasticsearch_client, self._data_directory
-        )
-        self.watches = WatchController(elasticsearch_client, self._data_directory)
+        self.package_policies = PackagePolicyController(kibana_client, **self._options)
+        self.agent_policies = AgentPolicyController(kibana_client, **self._options)
+        self.indices = IndexController(elasticsearch_client, **self._options)
+        self.saved_objects = SavedObjectController(kibana_client, **self._options)
+        self.pipelines = PipelineController(elasticsearch_client, **self._options)
+        self.transforms = TransformController(elasticsearch_client, **self._options)
+        self.watches = WatchController(elasticsearch_client, **self._options)
         self.enrich_policies = EnrichPolicyController(
-            elasticsearch_client, self._data_directory
+            elasticsearch_client, **self._options
         )
         self._controllers = {
             "indices": self.indices,

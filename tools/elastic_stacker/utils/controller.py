@@ -6,16 +6,12 @@ from pathlib import Path
 
 class GenericController:
     _client: httpx.Client
-    _default_data_directory: Path
+    _options: dict
     _resource_directory: str = ""
 
-    def __init__(
-        self,
-        client: httpx.Client,
-        data_directory: Path,
-    ):
+    def __init__(self, client: httpx.Client, **options):
         self._client = client
-        self._default_data_directory = data_directory
+        self._options = options
 
     def _clean_params(self, params: dict):
         # httpx includes query parameters even if their value is None
@@ -27,7 +23,7 @@ class GenericController:
 
     def _get_working_dir(self, data_directory: os.PathLike = None, create=False):
         if data_directory is None:
-            data_directory = self._default_data_directory
+            data_directory = self._options.get("data_directory")
         else:
             data_directory = Path(data_directory)
 

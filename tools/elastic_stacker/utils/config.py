@@ -25,7 +25,7 @@ CONFIG_FILE_PRECEDENCE = [
 GLOBAL_DEFAULT_PROFILE = {
     "elasticsearch": {"base_url": "https://localhost:9200"},
     "kibana": {"base_url": "https://localhost:5601"},
-    "io": {
+    "options": {
         "data_directory": "./stacker_data",
     },
 }
@@ -133,7 +133,7 @@ def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
     )
     final_profile["kibana"] = chain_configs(configs, keys=["client", "kibana"])
 
-    final_profile["io"] = chain_configs(configs, keys=["io"])
+    final_profile["options"] = chain_configs(configs, keys=["options"])
 
     final_profile = schema.load(final_profile)
 

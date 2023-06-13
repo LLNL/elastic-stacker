@@ -106,9 +106,7 @@ class APIClientConfigSchema(BaseSchema):
         return client_settings
 
 
-# for config values shared between load and dump
-# TODO: come up for a better name for this thing
-class IOConfigSchema(BaseSchema):
+class ControllerOptionsSchema(BaseSchema):
     data_directory = PathField(validate=PathValidator(file_ok=False))
 
 
@@ -116,7 +114,7 @@ class ProfileSchema(BaseSchema):
     client = fields.Nested(APIClientConfigSchema)
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
-    io = fields.Nested(IOConfigSchema)
+    options = fields.Nested(ControllerOptionsSchema)
 
 
 class ConfigFileSchema(BaseSchema):
