@@ -21,7 +21,9 @@ class GenericController:
         # (see https://www.python-httpx.org/compatibility/#event-hooks)
         return {k: v for k, v in params.items() if v is not None}
 
-    def _get_working_dir(self, data_directory: os.PathLike = None, create=False):
+    def _get_working_dir(
+        self, data_directory: os.PathLike = None, create=False
+    ) -> Path:
         if data_directory is None:
             data_directory = self._options.get("data_directory")
         else:

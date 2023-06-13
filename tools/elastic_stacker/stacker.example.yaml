@@ -1,7 +1,7 @@
 # these values will be used if no client is specified
 # if you only have one Elastic stack, put it here
 default:
-  io:
+  options:
     data_directory: ../../files
   client:
     verify: /etc/pki/tls/cert.pem
@@ -17,3 +17,7 @@ profiles:
     client:
       headers:
         Authorization: "Apikey <REDACTED>"
+    options:
+      watcher_user:
+        username: geralt
+        password: <REDACTED>

@@ -108,6 +108,8 @@ class APIClientConfigSchema(BaseSchema):
 
 class ControllerOptionsSchema(BaseSchema):
     data_directory = PathField(validate=PathValidator(file_ok=False))
+    watcher_users = fields.Mapping(fields.String, fields.String)
+    # TODO: add all the dumpers' and loaders' one-off arguments here (include_managed, etc.)
 
 
 class ProfileSchema(BaseSchema):
