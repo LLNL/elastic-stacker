@@ -12,15 +12,15 @@ from pathlib import Path
 import fire
 
 # local project
-from kibana.saved_objects import SavedObjectController
-from kibana.agent_policies import AgentPolicyController
+from elasticsearch.indices import IndexController
 from elasticsearch.pipelines import PipelineController
 from elasticsearch.transforms import TransformController
 from elasticsearch.watches import WatchController
 from elasticsearch.enrich_policies import EnrichPolicyController
+from kibana.saved_objects import SavedObjectController
+from kibana.agent_policies import AgentPolicyController
+from kibana.package_policies import PackagePolicyController
 
-# Removed pending clarification on the Fleet API data structures.
-# from kibana.package_policies import PackagePolicyController
 
 from utils.config import load_config, make_profile
 from utils.client import APIClient
@@ -31,9 +31,10 @@ logger = logging.getLogger("elastic_stacker")
 
 class Stacker:
     profile: dict
-    # package_policies: PackagePolicyController
-    saved_objects: SavedObjectController
+    package_policies: PackagePolicyController
     agent_policies: AgentPolicyController
+    indices: IndexController
+    saved_objects: SavedObjectController
     pipelines: PipelineController
     transforms: TransformController
     watches: WatchController
@@ -69,9 +70,12 @@ class Stacker:
         elasticsearch_client = APIClient(**self.profile["elasticsearch"])
         self._data_directory = self.profile["io"]["data_directory"]
 
-        # self.package_policies = PackagePolicyController(kibana_client, self._data_directory)
-        self.saved_objects = SavedObjectController(kibana_client, self._data_directory)
+        self.package_policies = PackagePolicyController(
+            kibana_client, self._data_directory
+        )
         self.agent_policies = AgentPolicyController(kibana_client, self._data_directory)
+        self.indices = IndexController(elasticsearch_client, self._data_directory)
+        self.saved_objects = SavedObjectController(kibana_client, self._data_directory)
         self.pipelines = PipelineController(elasticsearch_client, self._data_directory)
         self.transforms = TransformController(
             elasticsearch_client, self._data_directory
@@ -81,28 +85,43 @@ class Stacker:
             elasticsearch_client, self._data_directory
         )
         self._controllers = {
-            # "package_policies": self.package_policies,
+            "indices": self.indices,
             "saved_objects": self.saved_objects,
-            "agent_policies": self.agent_policies,
             "watches": self.watches,
             "pipelines": self.pipelines,
             "transforms": self.transforms,
             "watches": self.watches,
             "enrich_policies": self.enrich_policies,
         }
+        self._experimental_controllers = {
+            "package_policies": self.package_policies,
+            "agent_policies": self.agent_policies,
+        }
 
-    def system_dump(self, *types: str, include_managed: bool = True):
-        invalid_types = set(types).difference(set(self._controllers.keys()))
+    def system_dump(
+        self,
+        *types: str,
+        include_managed: bool = False,
+        include_experimental: bool = False
+    ):
+        valid_controllers = self._controllers
+        if include_experimental:
+            logger.warning(
+                "Including experimental objects which do not have a load function yet."
+            )
+            valid_controllers.update(self._experimental_controllers)
+
+        invalid_types = set(types).difference(set(valid_controllers.keys()))
         if invalid_types:
             raise Exception("types {} are invalid".format(invalid_types))
         if len(types) == 0:
-            types = self._controllers.keys()
+            types = valid_controllers.keys()
 
         dump_arguments = {"include_managed": include_managed}
 
         for type_name in types:
             logger.warning("exporting {}".format(type_name))
-            controller = getattr(self, type_name)
+            controller = valid_controllers[type_name]
             controller.dump(**dump_arguments)
 
     def system_load(
@@ -143,9 +162,10 @@ class Stacker:
             "delete_after_import": delete_after_import,
         }
         for i in range(retries + 1):
+            logger.info("beginning attempt no.")
             for type_name in types:
                 logger.warning("importing {}".format(type_name))
-                controller = getattr(self, type_name)
+                controller = self._controllers[type_name]
                 controller.load(**load_arguments)
 
 
