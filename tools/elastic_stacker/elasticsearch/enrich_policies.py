@@ -43,6 +43,14 @@ class EnrichPolicyController(ElasticsearchAPIController):
                     raise e
         return response_data
 
+    def execute(self, policy_name: str, wait_for_completion: bool = None):
+        # PUT /_enrich/policy/my-policy/_execute
+        endpoint = "/_enrich/policy/{}/_execute".format(policy_name)
+        query_params = {"wait_for_completion": wait_for_completion}
+        query_params = self._clean_params(query_params)
+        response = self._client.put(endpoint, params=query_params)
+        return response.json()
+
     def dump(self, data_directory: os.PathLike = None, **kwargs):
         working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self.get()["policies"]:
@@ -66,7 +74,17 @@ class EnrichPolicyController(ElasticsearchAPIController):
                 policy = self._read_file(policy_file)
                 policy_name = policy_file.stem
                 try:
-                    self.create(policy_name, policy)
+                    response = self.create(policy_name, policy)
+                    if (
+                        "error" not in response
+                        or response["error"].get("type")
+                        == "resporce_already_exists_exception"
+                    ):
+                        logger.warning(
+                            "Executing new enrich policy {}".format(policy_name)
+                        )
+                        # TODO: add a flag to not wait for completion on the execution
+                        self.execute(policy_name)
                 except HTTPStatusError as e:
                     if allow_failure:
                         logger.info(
