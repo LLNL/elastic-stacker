@@ -1,8 +1,5 @@
 import logging
-import json
 import os
-from pathlib import Path
-import shutil
 
 from httpx import HTTPStatusError
 

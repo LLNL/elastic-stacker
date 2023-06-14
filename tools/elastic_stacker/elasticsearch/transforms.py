@@ -1,7 +1,6 @@
 import logging
 import json
 import os
-from pathlib import Path
 
 from httpx import HTTPStatusError
 
@@ -226,9 +225,7 @@ class TransformController(ElasticsearchAPIController):
                                 break
                     else:
                         logger.info(
-                            "Creating new transform with id {}".format(
-                                transform_id, loaded_transform
-                            )
+                            "Creating new transform with id {}".format(transform_id)
                         )
                         self.create(
                             transform_id, loaded_transform, defer_validation=True

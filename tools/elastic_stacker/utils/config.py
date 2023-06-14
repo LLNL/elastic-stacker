@@ -2,7 +2,6 @@ import os
 import sys
 import logging
 from pathlib import Path
-from collections import ChainMap
 from typing import Iterable
 
 import yaml

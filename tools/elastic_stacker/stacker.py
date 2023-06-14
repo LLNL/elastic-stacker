@@ -2,11 +2,9 @@
 
 # stdlib
 import logging
-import json
 import os
 import shutil
 import tempfile
-from pathlib import Path
 
 # PyPI
 import fire
@@ -24,12 +22,17 @@ from kibana.package_policies import PackagePolicyController
 
 from utils.config import load_config, make_profile
 from utils.client import APIClient
-from utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 
 
 class Stacker:
+    """
+    Stacker is a tool for performing lift-and-shift operations that move
+    Elasticsearch and Kibana configuration objects across multiple
+    instances of these services.
+    """
+
     profile: dict
     package_policies: PackagePolicyController
     agent_policies: AgentPolicyController
@@ -98,7 +101,6 @@ class Stacker:
             "watches": self.watches,
             "pipelines": self.pipelines,
             "transforms": self.transforms,
-            "watches": self.watches,
             "enrich_policies": self.enrich_policies,
         }
         self._experimental_controllers = {

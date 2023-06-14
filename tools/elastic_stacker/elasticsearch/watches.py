@@ -1,8 +1,6 @@
 import getpass
 import logging
-import json
 import os
-from pathlib import Path
 
 from httpx import HTTPStatusError
 
@@ -28,9 +26,7 @@ def substitute_passwords(
             username = d.get("username", "")
             if prompt:
                 d[key] = getpass.getpass(
-                    "Password for {} in watch {}:".format(
-                        username=username, watch_name=watch_id
-                    )
+                    "Password for {} in watch {}:".format(username, watch_id)
                 )
             elif username in password_map:
                 d[key] = password_map[username]

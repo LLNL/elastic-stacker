@@ -1,7 +1,6 @@
 import os
 import logging
 import json
-from pathlib import Path
 from httpx import HTTPStatusError
 
 from slugify import slugify

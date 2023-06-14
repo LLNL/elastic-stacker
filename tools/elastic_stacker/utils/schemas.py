@@ -2,11 +2,7 @@ import os
 
 import logging
 from pathlib import Path
-import re
 
-import httpx
-import dotwiz
-import certifi
 from marshmallow import (
     Schema,
     fields,

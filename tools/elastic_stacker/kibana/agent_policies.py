@@ -1,7 +1,5 @@
 import logging
-import json
 import os
-from pathlib import Path
 
 from slugify import slugify
 

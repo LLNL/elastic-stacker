@@ -41,8 +41,8 @@ class GenericController:
     def _clean_params(self, params: dict):
         # httpx includes query parameters even if their value is None
         # (see https://www.python-httpx.org/compatibility/#query-parameters).
-        # ordinarily I'd add a pre-request hook that would remove these parameters,
-        # but httpx also does not let the user modify the request before it's sent.
+        # usually I'd add a pre-request hook to remove null parameters, but
+        # httpx also does not let the user modify the request before it's sent
         # (see https://www.python-httpx.org/compatibility/#event-hooks)
         return {k: v for k, v in params.items() if v is not None}
 
@@ -65,8 +65,9 @@ class GenericController:
 class ElasticsearchAPIController(GenericController):
     def _depaginate(self, method, key, page_size=10, **kwargs):
         """
-        Elasticsearch presents some of its APIs paginated, so rather than dump all of them
-        in one request we can turn that pagination into a nice, Pythonic generator.
+        Elasticsearch presents some of its APIs paginated, so rather than dump
+        all of them in one request we can turn that pagination into a nice,
+        Pythonic generator.
         """
         offset = 0
         results = {"count": float("inf")}
