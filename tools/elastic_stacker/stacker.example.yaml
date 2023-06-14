@@ -5,6 +5,15 @@ default:
     data_directory: ../../files
   client:
     verify: /etc/pki/tls/cert.pem
+  substitutions:
+    # remember to keep your regular expressions in single-quoted strings
+    # or your backslashes will be interpreted as escape sequences.
+    dump_kibana_urls:
+      search: '[\w-]*kibana[\w-]*\.llnl\.gov'
+      replace: "#{KIBANA_URL}"
+    dump_elastic_urls:
+      search: '[\w-]*elastic[-\w]*.llnl.gov'
+      replace: "#{ELASTICSEARCH_URL}"
 
 # you can select the configuration profile you want to use
 # with the option `-p <client_name>`"
@@ -18,6 +27,12 @@ profiles:
       headers:
         Authorization: "Apikey <REDACTED>"
     options:
-      watcher_user:
-        username: geralt
-        password: <REDACTED>
+      watcher_users:
+        geralt: <REDACTED>
+    substitutions:
+      load_kibana_url:
+        search: '#{KIBANA_URL}'
+        replace: lc-kibana-pre.llnl.gov
+      load_elastic_url:
+        search: '#{ELASTICSEARCH_URL}'
+        replace: lc-elastic-hot-1-pre.llnl.gov
