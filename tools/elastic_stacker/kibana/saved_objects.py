@@ -84,6 +84,7 @@ class SavedObjectController(GenericController):
         create_new_copies: bool = None,
         overwrite: bool = None,
         compatibility_mode: bool = None,
+        timeout: int = 10,
     ):
         if space_id is not None:
             endpoint = "/s/{}/api/saved_objects/_import".format(space_id)
@@ -108,7 +109,9 @@ class SavedObjectController(GenericController):
 
         files = {"file": (upload_filename, file, "application/ndjson")}
 
-        response = self._client.post(endpoint, params=query_params, files=files)
+        response = self._client.post(
+            endpoint, params=query_params, files=files, timeout=timeout
+        )
         return response.json()
 
     def load(
@@ -133,13 +136,10 @@ class SavedObjectController(GenericController):
             mode="ab+", max_size=intermediate_file_max_size
         ) as intermediate_file:
             for object_file in working_directory.glob("*/*.json"):
-                with object_file.open("rb") as fh:
-                    # kibana doesn't like the pretty-printing,
-                    # so we have to flatten it down one line each.
-                    object = json.load(fh)
-                    object_string = json.dumps(object)
-                    intermediate_file.write(str.encode(object_string))
-                    intermediate_file.write(b"\n")
+                object = self._read_file(object_file)
+                object_string = json.dumps(object)
+                intermediate_file.write(str.encode(object_string))
+                intermediate_file.write(b"\n")
             # jump back to the start of the file buffer
             intermediate_file.seek(0)
             try:
@@ -189,5 +189,4 @@ class SavedObjectController(GenericController):
                 )
                 file_name = slugify(obj_name) + ".json"
                 output_file = working_directory / obj["type"] / file_name
-                with output_file.open("w") as fh:
-                    json.dump(obj, fh, indent=4, sort_keys=True)
+                self._write_file(output_file, obj)

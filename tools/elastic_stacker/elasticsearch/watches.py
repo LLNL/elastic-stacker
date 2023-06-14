@@ -91,8 +91,7 @@ class WatchController(ElasticsearchAPIController):
         for watch_file in working_directory.glob("*.json"):
             watch_id = watch_file.stem
 
-            with watch_file.open("r") as fh:
-                watch = json.load(fh)
+            watch = self._read_file(watch_file)
 
             watch = substitute_passwords(
                 watch,
@@ -121,5 +120,4 @@ class WatchController(ElasticsearchAPIController):
         working_directory = self._get_working_dir(data_directory, create=True)
         for watch in self._depaginate(self.query, "watches", page_size=10):
             file_path = working_directory / (watch["_id"] + ".json")
-            with file_path.open("w") as file:
-                file.write(json.dumps(watch["watch"], indent=4, sort_keys=True))
+            self._write_file(file_path, watch["watch"])

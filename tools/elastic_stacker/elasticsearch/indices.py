@@ -295,8 +295,7 @@ class IndexController(ElasticsearchAPIController):
                 if key in index["settings"]["index"]:
                     index["settings"]["index"].pop(key)
             index_file = working_directory / (name + ".json")
-            with index_file.open("w") as fh:
-                fh.write(json.dumps(index, indent=4, sort_keys=True))
+            self._write_file(index_file, index)
 
     def load(
         self,
@@ -311,8 +310,7 @@ class IndexController(ElasticsearchAPIController):
 
         for index_file in working_directory.iterdir():
             index_name = index_file.stem
-            with index_file.open("r") as fh:
-                index = json.load(fh)
+            index = self._read_file(index_file)
             try:
                 if index_name in existing_indices:
                     logger.warn("Updating index {}".format(index_name))

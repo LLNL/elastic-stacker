@@ -59,5 +59,4 @@ class AgentPolicyController(FleetAPIController):
             if include_managed or not policy["is_managed"]:
                 filename = slugify(policy["name"]) + ".json"
                 file_path = working_directory / filename
-                with file_path.open("w") as file:
-                    file.write(json.dumps(policy, indent=4, sort_keys=True))
+                self._write_file(file_path, policy)

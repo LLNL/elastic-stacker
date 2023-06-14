@@ -86,6 +86,4 @@ class PackagePolicyController(FleetAPIController):
                 policy.pop(key)
             if "title" in policy.get("package", {}):
                 policy["package"].pop("title")
-
-            with file_path.open("w") as file:
-                file.write(json.dumps(policy, indent=4, sort_keys=True))
+            self._write_file(file_path, policy)

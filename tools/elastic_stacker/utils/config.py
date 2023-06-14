@@ -135,6 +135,8 @@ def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
 
     final_profile["options"] = chain_configs(configs, keys=["options"])
 
+    final_profile["substitutions"] = chain_configs(configs, keys=["substitutions"])
+
     final_profile = schema.load(final_profile)
 
     return final_profile

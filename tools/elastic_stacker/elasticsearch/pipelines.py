@@ -60,8 +60,7 @@ class PipelineController(ElasticsearchAPIController):
         for name, pipeline in pipelines.items():
             if include_managed or not pipeline.get("_meta", {}).get("managed"):
                 file_path = working_directory / (name + ".json")
-                with file_path.open("w") as file:
-                    file.write(json.dumps(pipeline, indent=4, sort_keys=True))
+                self._write_file(file_path, pipeline)
 
     def load(
         self,
@@ -73,8 +72,7 @@ class PipelineController(ElasticsearchAPIController):
         working_directory = self._get_working_dir(data_directory, create=False)
         if working_directory.is_dir():
             for pipeline_file in working_directory.glob("*.json"):
-                with pipeline_file.open("r") as fh:
-                    pipeline = json.load(fh)
+                pipeline = self._read_file(pipeline_file)
                 pipeline_id = pipeline_file.stem
                 try:
                     self.create(pipeline_id, pipeline)

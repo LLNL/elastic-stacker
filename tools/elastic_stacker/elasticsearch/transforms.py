@@ -190,8 +190,7 @@ class TransformController(ElasticsearchAPIController):
             }
 
             stats_file = working_directory / "_stats.json"
-            with stats_file.open("r") as fh:
-                reference_stats = json.load(fh)
+            reference_stats = self._read_file(stats_file)
 
             current_stats = {
                 t["id"]: t

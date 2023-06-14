@@ -50,8 +50,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
             policy_file = working_directory / filename
             policy = policy["config"]
             policy["match"].pop("name")
-            with policy_file.open("w") as fh:
-                fh.write(json.dumps(policy, sort_keys=True, indent=4))
+            self._write_file(policy_file, policy)
 
     def load(
         self,
@@ -64,8 +63,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
 
         if working_directory.is_dir():
             for policy_file in working_directory.glob("*.json"):
-                with policy_file.open("r") as fh:
-                    policy = json.load(fh)
+                policy = self._read_file(policy_file)
                 policy_name = policy_file.stem
                 try:
                     self.create(policy_name, policy)

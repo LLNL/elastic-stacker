@@ -67,18 +67,30 @@ class Stacker:
         ) | {"kbn-xsrf": "true"}
         self._options = self.profile["options"]
 
+        subs = self.profile.get("substitutions", {})
+
         kibana_client = APIClient(**self.profile["kibana"])
         elasticsearch_client = APIClient(**self.profile["elasticsearch"])
 
-        self.package_policies = PackagePolicyController(kibana_client, **self._options)
-        self.agent_policies = AgentPolicyController(kibana_client, **self._options)
-        self.indices = IndexController(elasticsearch_client, **self._options)
-        self.saved_objects = SavedObjectController(kibana_client, **self._options)
-        self.pipelines = PipelineController(elasticsearch_client, **self._options)
-        self.transforms = TransformController(elasticsearch_client, **self._options)
-        self.watches = WatchController(elasticsearch_client, **self._options)
+        self.package_policies = PackagePolicyController(
+            kibana_client, subs=subs, **self._options
+        )
+        self.agent_policies = AgentPolicyController(
+            kibana_client, subs=subs, **self._options
+        )
+        self.indices = IndexController(elasticsearch_client, subs=subs, **self._options)
+        self.saved_objects = SavedObjectController(
+            kibana_client, subs=subs, **self._options
+        )
+        self.pipelines = PipelineController(
+            elasticsearch_client, subs=subs, **self._options
+        )
+        self.transforms = TransformController(
+            elasticsearch_client, subs=subs, **self._options
+        )
+        self.watches = WatchController(elasticsearch_client, subs=subs, **self._options)
         self.enrich_policies = EnrichPolicyController(
-            elasticsearch_client, **self._options
+            elasticsearch_client, subs=subs, **self._options
         )
         self._controllers = {
             "indices": self.indices,
@@ -144,7 +156,7 @@ class Stacker:
             types = self._controllers.keys()
 
         if data_directory is None:
-            data_directory = self._data_directory
+            data_directory = self._options["data_directory"]
 
         if temp:
             working_data_directory = tempfile.mkdtemp(prefix="stacker_data_")

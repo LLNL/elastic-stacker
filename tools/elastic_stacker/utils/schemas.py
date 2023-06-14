@@ -2,6 +2,7 @@ import os
 
 import logging
 from pathlib import Path
+import re
 
 import httpx
 import dotwiz
@@ -108,8 +109,13 @@ class APIClientConfigSchema(BaseSchema):
 
 class ControllerOptionsSchema(BaseSchema):
     data_directory = PathField(validate=PathValidator(file_ok=False))
-    watcher_users = fields.Mapping(fields.String, fields.String)
+    watcher_users = fields.Dict(fields.String, fields.String)
     # TODO: add all the dumpers' and loaders' one-off arguments here (include_managed, etc.)
+
+
+class SubstitutionSchema(BaseSchema):
+    search = fields.String(required=True)
+    replace = fields.String(required=True)
 
 
 class ProfileSchema(BaseSchema):
@@ -117,8 +123,9 @@ class ProfileSchema(BaseSchema):
     kibana = fields.Nested(APIClientConfigSchema)
     elasticsearch = fields.Nested(APIClientConfigSchema)
     options = fields.Nested(ControllerOptionsSchema)
+    substitutions = fields.Dict(fields.String(), fields.Nested(SubstitutionSchema()))
 
 
 class ConfigFileSchema(BaseSchema):
     default = fields.Nested(ProfileSchema())
-    profiles = fields.Mapping(fields.String(), fields.Nested(ProfileSchema()))
+    profiles = fields.Dict(fields.String(), fields.Nested(ProfileSchema()))

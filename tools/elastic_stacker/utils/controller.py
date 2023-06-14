@@ -1,4 +1,6 @@
+import json
 import os
+import re
 
 import httpx
 from pathlib import Path
@@ -8,10 +10,33 @@ class GenericController:
     _client: httpx.Client
     _options: dict
     _resource_directory: str = ""
+    _subs: dict
 
-    def __init__(self, client: httpx.Client, **options):
+    def __init__(self, client: httpx.Client, subs: dict = {}, **options):
         self._client = client
         self._options = options
+        self._subs = subs
+        for name, sub in self._subs.items():
+            self._subs[name]["search"] = re.compile(sub["search"])
+
+    def _run_substitutions(self, value):
+        for name, sub in sorted(self._subs.items()):
+            search = sub["search"]
+            replace = sub["replace"]
+            value = re.sub(search, replace, value)
+        return value
+
+    def _write_file(self, path: os.PathLike, obj: dict):
+        output = json.dumps(obj, indent=4, sort_keys=True)
+        output = self._run_substitutions(output)
+        with open(path, "w") as fh:
+            fh.write(output)
+
+    def _read_file(self, path: os.PathLike):
+        with open(path, "r") as fh:
+            value = fh.read()
+        value = self._run_substitutions(value)
+        return json.loads(value)
 
     def _clean_params(self, params: dict):
         # httpx includes query parameters even if their value is None
