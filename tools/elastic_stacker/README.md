@@ -14,11 +14,11 @@ A main use case is for moving from development done in a PRE environment, and in
 4. Activate the environment: `pipenv shell`
 5. Concrete-ize the configuration file
     ```sh
-    cp stacker.example.toml stacker.toml
+    cp stacker.example.yaml stacker.yaml
     # Update any configuration options needed:
-    vim stacker.toml
+    vim stacker.yaml
     ```
-6. Run the tool (more detailed usage below): `./cli.py -p <pre|prod> export all`
+6. Run the tool (more detailed usage below): `./stacker.py -p <pre|prod> system_dump`
 
 
 ## Usage
@@ -29,7 +29,8 @@ Running the tools
 # Export all the user configurations from LC Elastic Pre
 # Export should go in to the `files/` directory at the top of this repo
 # this is so that the resulting exported objects can be tracked in git.
-./cli.py -e pre -d $(git rev-parse --show-toplevel)/files/ export all
+# You can also set the data directory in the config file (see the example).
+./stacker.py system_dump -p pre --data-directory $(git rev-parse --show-toplevel)/files/
 
 # Check the changes that resulted from the export, make sure things look expected
 git diff
