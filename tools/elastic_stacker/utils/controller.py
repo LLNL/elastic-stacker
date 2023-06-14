@@ -7,6 +7,15 @@ from pathlib import Path
 
 
 class GenericController:
+    """
+    Stacker groups API resources as "controllers" which have methods
+    for handling the specific behavior for interacting with those API
+    resources.
+
+    These controllers have some methods in common related to file reading and
+    writing and argument processing, so they all inherit from this base class.
+    """
+
     _client: httpx.Client
     _options: dict
     _resource_directory: str = ""

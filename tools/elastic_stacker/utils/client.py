@@ -5,8 +5,12 @@ import httpx
 logger = logging.getLogger("elastic_stacker")
 
 
-# subclassing httpx.client to reduce the boilerplate that goes with every request
 class APIClient(httpx.Client):
+    """
+    A subclass of httpx.Client which encapsulates some of the client-level
+    boilerplate like error-handling hooks.
+    """
+
     def raise_for_status(self, response: httpx.Response):
         response.raise_for_status()
 

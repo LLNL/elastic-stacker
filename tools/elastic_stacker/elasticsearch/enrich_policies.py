@@ -9,17 +9,31 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class EnrichPolicyController(ElasticsearchAPIController):
+    """
+    EnrichPolicyController manages the import and export of Enrich Policies.
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/enrich-setup.html
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/enrich-apis.html
+    """
+
     _resource_directory = "enrich_policies"
 
     def _build_endpoint(self, *names: str) -> str:
         return "_enrich/policy/{}".format(",".join(names))
 
     def get(self, *names):
+        """
+        Get enrich policies by name.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/get-enrich-policy-api.html
+        """
         endpoint = self._build_endpoint(*names)
         response = self._client.get(endpoint)
         return response.json()
 
     def create(self, name: str, policy: dict):
+        """
+        Create a new enrich policy.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/put-enrich-policy-api.html
+        """
         endpoint = self._build_endpoint(name)
         try:
             response = self._client.put(endpoint, json=policy)
@@ -41,7 +55,10 @@ class EnrichPolicyController(ElasticsearchAPIController):
         return response_data
 
     def execute(self, policy_name: str, wait_for_completion: bool = None):
-        # PUT /_enrich/policy/my-policy/_execute
+        """
+        Execute an enrich policy.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/execute-enrich-policy-api.html
+        """
         endpoint = "/_enrich/policy/{}/_execute".format(policy_name)
         query_params = {"wait_for_completion": wait_for_completion}
         query_params = self._clean_params(query_params)
@@ -49,6 +66,9 @@ class EnrichPolicyController(ElasticsearchAPIController):
         return response.json()
 
     def dump(self, data_directory: os.PathLike = None, **kwargs):
+        """
+        Dump enrich policies out to files in the data directory.
+        """
         working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self.get()["policies"]:
             filename = policy["config"]["match"]["name"] + ".json"
@@ -64,6 +84,10 @@ class EnrichPolicyController(ElasticsearchAPIController):
         delete_after_import: bool = False,
         **kwargs
     ):
+        """
+        Load enrich policies from files in the data directory and create them
+        on the Elasticsearch system.
+        """
         working_directory = self._get_working_dir(data_directory, create=True)
 
         if working_directory.is_dir():

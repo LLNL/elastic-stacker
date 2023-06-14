@@ -10,6 +10,12 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class TransformController(ElasticsearchAPIController):
+    """
+    TransformController manages the import and export of transforms
+    within Elasticsearch.
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/transform-apis.html
+    """
+
     _base_endpoint = "_transform"
     _resource_directory = "transforms"
 
@@ -25,6 +31,10 @@ class TransformController(ElasticsearchAPIController):
         offset: int = None,
         size: int = None
     ):
+        """
+        Get some number of transforms by ID.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/get-transform.html
+        """
         query_params = {
             "allow_no_match": allow_no_match,
             "exclude_generated": exclude_generated,
@@ -43,6 +53,10 @@ class TransformController(ElasticsearchAPIController):
         defer_validation: bool = None,
         timeout: str = None,
     ):
+        """
+        Create a transform.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/put-transform.html
+        """
         endpoint = self._build_endpoint(id)
         query_params = {"defer_validation": defer_validation, "timeout": timeout}
         query_params = self._clean_params(query_params)
@@ -57,6 +71,10 @@ class TransformController(ElasticsearchAPIController):
         offset: int = None,
         size: int = None
     ):
+        """
+        Get transform statistics, including the running state of the transform.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/get-transform-stats.html
+        """
         if not ids:
             ids = ["_all"]
         endpoint = self._build_endpoint(*ids) + "/_stats"
@@ -75,6 +93,9 @@ class TransformController(ElasticsearchAPIController):
         target_state: str,
         timeout: str = None,
     ):
+        """
+        Set transform state (started or stopped.)
+        """
         started_states = {"started", "indexing"}
         stopped_states = {"failed", "stopped", "stopping", "aborted"}
         allowed_states = started_states.union(stopped_states)
@@ -107,6 +128,10 @@ class TransformController(ElasticsearchAPIController):
         from_time: str = None,
         timeout: str = None,
     ):
+        """
+        Start a transform.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/start-transform.html
+        """
         endpoint = self._build_endpoint(id) + "/_start"
         query_params = {"from": from_time, "timeout": timeout}
         query_params = self._clean_params(query_params)
@@ -122,6 +147,10 @@ class TransformController(ElasticsearchAPIController):
         wait_for_completion: bool = None,
         timeout: str = None,
     ):
+        """
+        Stop a transform.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/stop-transform.html
+        """
         endpoint = self._build_endpoint(id) + "/_stop"
 
         query_params = {
@@ -143,6 +172,10 @@ class TransformController(ElasticsearchAPIController):
         delete_dest_index: bool = None,
         timeout: str = None,
     ):
+        """
+        Delete a transform.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/delete-transform.html
+        """
         endpoint = self._build_endpoint(id)
 
         query_params = {
@@ -163,6 +196,11 @@ class TransformController(ElasticsearchAPIController):
         defer_validation: bool = None,
         timeout: str = None,
     ):
+        """
+        Update an existing transform.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/update-transform.html
+        """
+
         endpoint = self._build_endpoint(id) + "/_update"
 
         query_params = {"defer_validation": defer_validation, "timeout": timeout}
@@ -177,6 +215,9 @@ class TransformController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         **kwargs
     ):
+        """
+        Load transforms from files in the data directory and create them in Elasticsearch.
+        """
         working_directory = self._get_working_dir(data_directory, create=False)
         if working_directory.is_dir():
             # create a map of all transforms by id
@@ -247,6 +288,9 @@ class TransformController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         **kwargs
     ):
+        """
+        Dump all transforms from Elasticsearch out to files in the data directory.
+        """
         working_directory = self._get_working_dir(data_directory, create=True)
         for transform in self._depaginate(self.get, key="transforms", page_size=100):
             if include_managed or not transform.get("_meta", {}).get("managed"):

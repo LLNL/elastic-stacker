@@ -9,6 +9,11 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class PipelineController(ElasticsearchAPIController):
+    """
+    PipelineController manages the import/export of ingest pipelines.
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest-apis.html
+    """
+
     _base_endpoint = "_ingest/pipeline"
     _resource_directory = "pipelines"
 
@@ -21,6 +26,10 @@ class PipelineController(ElasticsearchAPIController):
         return endpoint
 
     def get(self, id: str = None, master_timeout: str = None) -> dict:
+        """
+        Get one or all of the ingest pipelines on the system.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/get-pipeline-api.html
+        """
         endpoint = self._build_endpoint(id)
         query_params = {"master_timeout": master_timeout} if master_timeout else {}
         response = self._client.get(endpoint, params=self._clean_params(query_params))
@@ -34,6 +43,10 @@ class PipelineController(ElasticsearchAPIController):
         master_timeout: str = None,
         timeout: str = None,
     ):
+        """
+        Create a new ingest pipeline.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/put-pipeline-api.html
+        """
         endpoint = self._build_endpoint(id)
 
         query_params = {
@@ -53,6 +66,9 @@ class PipelineController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         **kwargs,
     ):
+        """
+        Dump all ingest pipelines on the system to files in the data directory
+        """
         working_directory = self._get_working_dir(data_directory, create=True)
         pipelines = self.get()
         for name, pipeline in pipelines.items():
@@ -67,6 +83,10 @@ class PipelineController(ElasticsearchAPIController):
         allow_failure: bool = False,
         **kwargs,
     ):
+        """
+        Load ingest pipeline configurations from files and load them into
+        Elasticsearch.
+        """
         working_directory = self._get_working_dir(data_directory, create=False)
         if working_directory.is_dir():
             for pipeline_file in working_directory.glob("*.json"):

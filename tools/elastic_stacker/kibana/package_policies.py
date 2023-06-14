@@ -11,6 +11,13 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class PackagePolicyController(FleetAPIController):
+    """
+    PackagePolicyController manages the import and export of package policies
+    from the Fleet Server.
+    Because the Fleet API is in tech preview, the functionality is incomplete.
+    https://www.elastic.co/guide/en/fleet/master/fleet-apis.html
+    """
+
     _base_endpoint = "/api/fleet/package_policies"
     _resource_directory = "package_policies"
 

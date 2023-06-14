@@ -46,6 +46,11 @@ def substitute_passwords(
 
 
 class WatchController(ElasticsearchAPIController):
+    """
+    WatchController manages the import and export of Watches from Elasticsearch.
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/watcher-api.html
+    """
+
     _resource_directory = "watches"
 
     def query(
@@ -56,6 +61,10 @@ class WatchController(ElasticsearchAPIController):
         sort: dict = None,
         search_after: dict = None,
     ):
+        """
+        Get a list of all watches that match a certain query.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/watcher-api-query-watches.html
+        """
         post_body = {
             "from": offset,
             "size": size,
@@ -68,6 +77,10 @@ class WatchController(ElasticsearchAPIController):
         return response.json()
 
     def create(self, watch_id: str, watch: dict, active: bool = None):
+        """
+        Create a new watch, or update an existing one.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/watcher-api-put-watch.html
+        """
         endpoint = "_watcher/watch/{}".format(watch_id)
         query_params = {"active": active}
         query_params = self._clean_params(query_params)
@@ -82,6 +95,9 @@ class WatchController(ElasticsearchAPIController):
         prompt_credentials: bool = False,
         **kwargs,
     ):
+        """
+        Load in watches from files in the data directory and create them in Elasticsearch.
+        """
         working_directory = self._get_working_dir(data_directory, create=False)
 
         for watch_file in working_directory.glob("*.json"):
@@ -113,6 +129,9 @@ class WatchController(ElasticsearchAPIController):
                     watch_file.unlink()
 
     def dump(self, data_directory: os.PathLike = None, **kwargs):
+        """
+        Dump out Watches from Elasticsearch to files in the data directory.
+        """
         working_directory = self._get_working_dir(data_directory, create=True)
         for watch in self._depaginate(self.query, "watches", page_size=10):
             file_path = working_directory / (watch["_id"] + ".json")

@@ -14,6 +14,11 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class SavedObjectController(GenericController):
+    """
+    SavedObjectController manages the import and export of Kibana's Saved Objects.
+    https://www.elastic.co/guide/en/kibana/current/saved-objects-api.html
+    """
+
     _resource_directory = "saved_objects"
 
     def types(self):
@@ -65,6 +70,10 @@ class SavedObjectController(GenericController):
         return endpoint, post_body
 
     def export(self, *args, **kwargs) -> bytes:
+        """
+        Export all saved objects as a single bytestring.
+        https://www.elastic.co/guide/en/kibana/current/saved-objects-api-export.html
+        """
         endpoint, post_body = self._raw_export_objects(*args, **kwargs)
         return self._client.post(endpoint, json=post_body).content
 
@@ -73,6 +82,7 @@ class SavedObjectController(GenericController):
         """
         Saved object exports can get extremely large; we can handle large exports by making a single export request
         and streaming the response back line by line to be written to disk.
+        https://www.elastic.co/guide/en/kibana/current/saved-objects-api-export.html
         """
         endpoint, post_body = self._raw_export_objects(*args, **kwargs)
         return self._client.stream("POST", endpoint, json=post_body)
@@ -86,6 +96,10 @@ class SavedObjectController(GenericController):
         compatibility_mode: bool = None,
         timeout: int = 10,
     ):
+        """
+        Import saved objects from a previously exported saved objects file.
+        https://www.elastic.co/guide/en/kibana/current/saved-objects-api-import.html
+        """
         if space_id is not None:
             endpoint = "/s/{}/api/saved_objects/_import".format(space_id)
         else:
@@ -123,10 +137,10 @@ class SavedObjectController(GenericController):
         data_directory: os.PathLike = None,
         **kwargs
     ):
-        # We could just iterate over all the files and POST them all individually,
-        # but that'd be awful slow, so we can instead send them all as one batch
-        # by first concatenating them into this temporary file-like object in memory.
-
+        """
+        Loads Saved Objects from files on disk and imports them into Kibana.
+        Designed for the case where Saved Objects are split into many separate files.
+        """
         working_directory = self._get_working_dir(data_directory, create=False)
 
         if not working_directory.exists():
@@ -160,6 +174,12 @@ class SavedObjectController(GenericController):
                     shutil.rmtree(working_directory)
 
     def dump(self, *types: str, data_directory: os.PathLike = None, **kwargs):
+        """
+        Dumps saved objects from Kibana.
+        In contrast to Kibana's native export functionality, this splits the
+        export across many separate files so they can be managed individually
+        by e.g. version-control.
+        """
         known_types = {t["name"] for t in self.types()["types"]}
 
         types = set(types) if types else known_types

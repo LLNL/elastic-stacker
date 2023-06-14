@@ -28,9 +28,8 @@ logger = logging.getLogger("elastic_stacker")
 
 class Stacker:
     """
-    Stacker is a tool for performing lift-and-shift operations that move
-    Elasticsearch and Kibana configuration objects across multiple
-    instances of these services.
+    Stacker is a tool for moving Elasticsearch and Kibana configuration
+    objects across multiple instances of these services.
     """
 
     profile: dict
@@ -114,6 +113,14 @@ class Stacker:
         include_managed: bool = False,
         include_experimental: bool = False
     ):
+        """
+        Dumps all supported resource types, or the ones specified with the
+        `types` argument, out to their own files.
+        In general, this accepts all the same arguments as any of the
+        individual resources' dump() methods.
+        The `include_experimental` argument is also included to allow you to
+        dump resources for which the loader may not yet be written.
+        """
         valid_controllers = self._controllers
         if include_experimental:
             logger.warning(
@@ -144,6 +151,22 @@ class Stacker:
         allow_failure: bool = False,
         stubborn: bool = False
     ):
+        """
+        Load all resources from a previous dump into the specified Elastic
+        Stack.
+        Includes a couple arguments not supported by the subordinate resources.
+        `retries` sets the number of times to attempt to import all the
+        specified resources; this can be useful to resolve weird dependency
+        loops.
+        `delete` deletes each resource file from the filesystem after it was
+        successfully imported -- this can make loads with a high number of
+        retries much faster.
+        `temp` makes a temporary copy of the dump and operates on that
+        instead of the specified data directory; this is useful when `delete`
+        is set.
+        `stubborn` is equivalent to `--delete --temp --retries=5`, but the
+        value for retries will be used instead if specified.
+        """
         if stubborn:
             delete_after_import = True
             temp = True

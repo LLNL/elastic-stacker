@@ -33,6 +33,10 @@ logger = logging.getLogger("elastic_stacker")
 
 
 def find_config():
+    """
+    Find the config file based on environment variables and the specified
+    search order.
+    """
     env_path = os.getenv(CONFIG_ENV_VAR)
     if env_path is not None:
         env_path = Path(env_path).expanduser()
@@ -51,6 +55,9 @@ def find_config():
 
 
 def read_config(path: Path = None):
+    """
+    Load the config file as YAML.
+    """
     logger.info("Reading configuration from file {}".format(path))
     with path.open("r") as fh:
         raw_config = yaml.safe_load(fh)
@@ -58,12 +65,18 @@ def read_config(path: Path = None):
 
 
 def validate_config(raw_config: dict):
+    """
+    Validate the config object using the Marshmallow schema.
+    """
     schema = ConfigFileSchema()
     config = schema.load(raw_config)
     return config
 
 
 def load_config(path: os.PathLike = None):
+    """
+    Find, load and validate the config file.
+    """
     if path is None:
         path = find_config()
     else:

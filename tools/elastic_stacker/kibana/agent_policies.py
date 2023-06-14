@@ -9,6 +9,13 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class AgentPolicyController(FleetAPIController):
+    """
+    AgentPolicyController manages the import and export of Agent policies
+    from the Fleet Server.
+    Because the Fleet API is in tech preview, the functionality is incomplete.
+    https://www.elastic.co/guide/en/fleet/master/fleet-apis.html
+    """
+
     _base_endpoint = "/api/fleet/agent_policies"
     _resource_directory = "agent_policies"
 

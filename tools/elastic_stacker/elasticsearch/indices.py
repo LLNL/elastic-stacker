@@ -14,6 +14,11 @@ logger = logging.getLogger("elastic_stacker")
 
 
 class IndexController(ElasticsearchAPIController):
+    """
+    IndexController manages the import and export of Elasticsearch indices.
+    https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html
+    """
+
     _resource_directory = "indices"
 
     def get(
@@ -27,6 +32,11 @@ class IndexController(ElasticsearchAPIController):
         local: bool = None,
         master_timeout: bool = None,
     ):
+        """
+        Get an index with settings, mappings and aliases.
+        Defaults to all indices.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-index.html
+        """
         endpoint = ",".join(index_names)
         query_params = {
             "expand_wildcards": expand_wildcards,
@@ -52,6 +62,10 @@ class IndexController(ElasticsearchAPIController):
         ignore_unavailable: bool = None,
         master_timeout: str = None,
     ) -> dict:
+        """
+        Get index settings.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-settings.html
+        """
         query_params = {
             "allow_no_indices": allow_no_indices,
             "expand_wildcards": expand_wildcards,
@@ -74,6 +88,10 @@ class IndexController(ElasticsearchAPIController):
         local: bool = None,
         master_timeout: str = None,
     ) -> dict:
+        """
+        Get mappings for an index.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
+        """
         endpoint = "{}/_mapping".format(",".join(index_names))
         query_params = {
             "allow_no_indices": allow_no_indices,
@@ -95,6 +113,10 @@ class IndexController(ElasticsearchAPIController):
         ignore_unavailable: bool = None,
         local: bool = None,
     ) -> dict:
+        """
+        Get aliases for an index.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-alias.html
+        """
         endpoint = "{}/_alias/{}".format(",".join(index_names), alias_name)
         query_params = {
             "allow_no_indices": allow_no_indices,
@@ -114,6 +136,10 @@ class IndexController(ElasticsearchAPIController):
         master_timeout: str = None,
         timeout: str = None,
     ):
+        """
+        Create a new index, with settings, mappings, and aliases.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html
+        """
         query_params = {
             "wait_for_active_shards": wait_for_active_shards,
             "master_timeout": master_timeout,
@@ -131,6 +157,10 @@ class IndexController(ElasticsearchAPIController):
         master_timeout: str = None,
         timeout: str = None,
     ):
+        """
+        Update an alias, or create if it doesn't exist.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-add-alias.html
+        """
         endpoint = "/{}/_alias/{}".format(",".join(targets), name)
         query_params = {
             "master_timeout": master_timeout,
@@ -151,6 +181,10 @@ class IndexController(ElasticsearchAPIController):
         timeout: str = None,
         write_index_only: bool = None,
     ):
+        """
+        Update a mapping for an index.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html
+        """
         endpoint = "/{}/_mapping/".format(",".join(targets))
         query_params = {
             "allow_no_indices": allow_no_indices,
@@ -176,6 +210,10 @@ class IndexController(ElasticsearchAPIController):
         master_timeout: str = None,
         timeout: str = None,
     ):
+        """
+        Update index settings.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-update-settings.html
+        """
         endpoint = "/{}/_settings/".format(",".join(targets))
         query_params = {
             "allow_no_indices": allow_no_indices,
@@ -200,6 +238,10 @@ class IndexController(ElasticsearchAPIController):
         master_timeout: str = None,
         timeout: str = None,
     ):
+        """
+        Close an index.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-close.html
+        """
         endpoint = "/{}/_close".format(",".join(targets))
         query_params = {
             "allow_no_indices": allow_no_indices,
@@ -223,6 +265,10 @@ class IndexController(ElasticsearchAPIController):
         master_timeout: str = None,
         timeout: str = None,
     ):
+        """
+        Open a closed index.
+        https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-open-close.html
+        """
         endpoint = "/{}/_close".format(",".join(targets))
         query_params = {
             "allow_no_indices": allow_no_indices,
@@ -245,6 +291,9 @@ class IndexController(ElasticsearchAPIController):
         timeout: str = None,
         close_index_to_modify_settings: bool = False,
     ):
+        """
+        Update an index, including settings, mappings and aliases.
+        """
         for alias_name, alias in index["aliases"].items():
             self.upsert_alias(
                 alias,
@@ -282,6 +331,9 @@ class IndexController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         **kwargs,
     ):
+        """
+        Dump all indices on the system out to files in the data directory.
+        """
         working_directory = self._get_working_dir(data_directory, create=True)
 
         indices = self.get("_all")
@@ -303,6 +355,10 @@ class IndexController(ElasticsearchAPIController):
         close_indices_to_modify_settings: bool = False,
         **kwargs,
     ):
+        """
+        Load all indices in from files in the data directory, and recreate
+        them on the Elasticsearch system.
+        """
         working_directory = self._get_working_dir(data_directory, create=False)
         existing_indices = self.get("_all")
 
