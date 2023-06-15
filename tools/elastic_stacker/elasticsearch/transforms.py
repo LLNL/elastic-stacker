@@ -98,7 +98,7 @@ class TransformController(ElasticsearchAPIController):
         """
         started_states = {"started", "indexing"}
         stopped_states = {"failed", "stopped", "stopping", "aborted"}
-        allowed_states = started_states.union(stopped_states)
+        allowed_states = started_states | stopped_states
 
         if target_state not in allowed_states:
             err_msg = "{} is not a valid state for transforms; acceptable values are {}.".format(
