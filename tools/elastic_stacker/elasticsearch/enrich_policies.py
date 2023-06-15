@@ -40,18 +40,16 @@ class EnrichPolicyController(ElasticsearchAPIController):
             response_data = response.json()
         except HTTPStatusError as e:
             response_data = e.response.json()
-            if "error" in response_data:
-                if (
-                    response_data["error"]["type"]
-                    == "resource_already_exists_exception"
-                ):
-                    # Elasticsearch won't let you modify enrich policies after creation,
-                    # and the process for replacing an old one with a new one is a massive pain in the neck
-                    # so changing existing policies is not supported in version 1, but the user
-                    # should be warned that the policy hasn't been changed.
-                    logger.warn(response_data["error"]["reason"])
-                else:
-                    raise e
+            if "error" in response_data and (
+                response_data["error"]["type"] == "resource_already_exists_exception"
+            ):
+                # Elasticsearch won't let you modify enrich policies after creation,
+                # and the process for replacing an old one with a new one is a massive pain in the neck
+                # so changing existing policies is not supported in version 1, but the user
+                # should be warned that the policy hasn't been changed.
+                logger.warn(response_data["error"]["reason"])
+            else:
+                raise e
         return response_data
 
     def execute(self, policy_name: str, wait_for_completion: bool = None):
