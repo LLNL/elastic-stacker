@@ -22,6 +22,7 @@ from kibana.package_policies import PackagePolicyController
 
 from utils.config import load_config, make_profile
 from utils.client import APIClient
+from utils.logging import configure_logger
 
 logger = logging.getLogger("elastic_stacker")
 
@@ -49,6 +50,8 @@ class Stacker:
         elasticsearch: str = None,
         kibana: str = None,
         ca: os.PathLike = None,
+        log_level: str = None,
+        ecs_log: bool = None,
     ):
         global_config = load_config(config)  # if None, checks list of default locations
 
@@ -57,11 +60,14 @@ class Stacker:
             "elasticsearch": {"base_url": elasticsearch},
             "kibana": {"base_url": kibana},
             "client": {"verify": ca},
+            "log": {"level": log_level, "ecs": ecs_log},
         }
 
         self.profile = make_profile(
             global_config, profile_name=profile, overrides=overrides
         )
+
+        configure_logger(**self.profile["log"])
 
         # https://www.elastic.co/guide/en/kibana/master/api.html#api-request-headers
         self.profile["kibana"]["headers"] = self.profile["kibana"].get(

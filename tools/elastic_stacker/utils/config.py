@@ -27,6 +27,7 @@ GLOBAL_DEFAULT_PROFILE = {
     "options": {
         "data_directory": "./stacker_data",
     },
+    "log": {"level": "WARN", "ecs": False},
 }
 
 logger = logging.getLogger("elastic_stacker")
@@ -148,6 +149,8 @@ def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
     final_profile["options"] = chain_configs(configs, keys=["options"])
 
     final_profile["substitutions"] = chain_configs(configs, keys=["substitutions"])
+
+    final_profile["log"] = chain_configs(configs, keys=["log"])
 
     final_profile = schema.load(final_profile)
 

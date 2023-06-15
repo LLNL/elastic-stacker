@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 
 import logging
@@ -12,7 +13,9 @@ from marshmallow import (
     ValidationError,
 )
 
-# TODO: debug logging for the schema loader
+LOGLEVELS = ["DEBUG", "INFO", "WARNING", "WARN", "ERROR", "CRITICAL"]
+LOGLEVELS = LOGLEVELS + [l.lower() for l in LOGLEVELS]
+
 logger = logging.getLogger("elastic_stacker")
 
 
@@ -96,6 +99,15 @@ class BasicAuthSchema(BaseSchema):
         return (data["username"], data["password"])
 
 
+class LoggerConfigSchema(BaseSchema):
+    """
+    schema for logger configuration
+    """
+
+    level = fields.String(validate=validate.OneOf(LOGLEVELS))
+    ecs = fields.Boolean()
+
+
 class TLSConfigSchema(BaseSchema):
     """
     A schema for a paired certificate and private key, e.g. for mutual TLS
@@ -168,6 +180,7 @@ class ProfileSchema(BaseSchema):
     elasticsearch = fields.Nested(APIClientConfigSchema)
     options = fields.Nested(ControllerOptionsSchema)
     substitutions = fields.Dict(fields.String(), fields.Nested(SubstitutionSchema()))
+    log = fields.Nested(LoggerConfigSchema)
 
 
 class ConfigFileSchema(BaseSchema):

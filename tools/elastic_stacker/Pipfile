@@ -10,6 +10,7 @@ python-slugify = "*"
 dotwiz = "*"
 fire = "*"
 pyyaml = "*"
+ecs-logging = "*"
 
 [dev-packages]
 black = "*"

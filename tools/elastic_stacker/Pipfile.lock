@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c1c8b828bf1e180eb345000e2c650c43d157354022f34590042d4fc295c9e7c4"
+            "sha256": "fa9422642fd4a03d3a3e86b33a6676a5ae9e514705cbec48bf5923464050f38e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -40,6 +40,14 @@
             ],
             "index": "pip_conf_index_global",
             "version": "==0.4.0"
+        },
+        "ecs-logging": {
+            "hashes": [
+                "sha256:34567bda91534a480f12117c30e1aac78489cc9a0ace172014d80f3d1e29c85b",
+                "sha256:543ed7b634901aee465fddf70f52b6fdbd35e825e7cbcae2e664d7dfdff2f859"
+            ],
+            "index": "pip_conf_index_global",
+            "version": "==2.0.2"
         },
         "exceptiongroup": {
             "hashes": [
