@@ -31,7 +31,7 @@ class PipelineController(ElasticsearchAPIController):
         https://www.elastic.co/guide/en/elasticsearch/reference/current/get-pipeline-api.html
         """
         endpoint = self._build_endpoint(id)
-        query_params = {"master_timeout": master_timeout} if master_timeout else {}
+        query_params = {"master_timeout": master_timeout}
         response = self._client.get(endpoint, params=self._clean_params(query_params))
         return response.json()
 
