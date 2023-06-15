@@ -88,19 +88,19 @@ class PipelineController(ElasticsearchAPIController):
         Elasticsearch.
         """
         working_directory = self._get_working_dir(data_directory, create=False)
-        if working_directory.is_dir():
-            for pipeline_file in working_directory.glob("*.json"):
-                pipeline = self._read_file(pipeline_file)
-                pipeline_id = pipeline_file.stem
-                try:
-                    self.create(pipeline_id, pipeline)
-                except HTTPStatusError as e:
-                    if allow_failure:
-                        logger.info(
-                            "Experienced an error; continuing because allow_failure is True"
-                        )
-                    else:
-                        raise e
+
+        for pipeline_file in working_directory.glob("*.json"):
+            pipeline = self._read_file(pipeline_file)
+            pipeline_id = pipeline_file.stem
+            try:
+                self.create(pipeline_id, pipeline)
+            except HTTPStatusError as e:
+                if allow_failure:
+                    logger.info(
+                        "Experienced an error; continuing because allow_failure is True"
+                    )
                 else:
-                    if delete_after_import:
-                        pipeline_file.unlink()
+                    raise e
+            else:
+                if delete_after_import:
+                    pipeline_file.unlink()
