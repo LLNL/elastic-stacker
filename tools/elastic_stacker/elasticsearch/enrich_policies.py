@@ -88,29 +88,26 @@ class EnrichPolicyController(ElasticsearchAPIController):
         """
         working_directory = self._get_working_dir(data_directory, create=True)
 
-        if working_directory.is_dir():
-            for policy_file in working_directory.glob("*.json"):
-                policy = self._read_file(policy_file)
-                policy_name = policy_file.stem
-                try:
-                    response = self.create(policy_name, policy)
-                    if (
-                        "error" not in response
-                        or response["error"].get("type")
-                        == "resporce_already_exists_exception"
-                    ):
-                        logger.warning(
-                            "Executing new enrich policy {}".format(policy_name)
-                        )
-                        # TODO: add a flag to not wait for completion on the execution
-                        self.execute(policy_name)
-                except HTTPStatusError as e:
-                    if allow_failure:
-                        logger.info(
-                            "Experienced an error; continuing because allow_failure is True"
-                        )
-                    else:
-                        raise e
+        for policy_file in working_directory.glob("*.json"):
+            policy = self._read_file(policy_file)
+            policy_name = policy_file.stem
+            try:
+                response = self.create(policy_name, policy)
+                if (
+                    "error" not in response
+                    or response["error"].get("type")
+                    == "resporce_already_exists_exception"
+                ):
+                    logger.warning("Executing new enrich policy {}".format(policy_name))
+                    # TODO: add a flag to not wait for completion on the execution
+                    self.execute(policy_name)
+            except HTTPStatusError as e:
+                if allow_failure:
+                    logger.info(
+                        "Experienced an error; continuing because allow_failure is True"
+                    )
                 else:
-                    if delete_after_import:
-                        policy_file.unlink()
+                    raise e
+            else:
+                if delete_after_import:
+                    policy_file.unlink()

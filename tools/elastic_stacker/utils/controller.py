@@ -68,6 +68,11 @@ class GenericController:
         if create:
             working_directory.mkdir(parents=True, exist_ok=True)
 
+        if not working_directory.is_dir():
+            raise NotADirectoryError(
+                "The data_directory {} is not valid directory".format(working_directory)
+            )
+
         return working_directory
 
 
