@@ -105,8 +105,7 @@ class TransformController(ElasticsearchAPIController):
                 target_state, allowed_states
             )
             logger.error(err_msg)
-            # TODO: this should be some more specific subclass of Exception
-            raise Exception(err_msg)
+            raise ValueError(err_msg)
 
         current_stats = self.stats(id)
         current_state = current_stats["transforms"][0]["state"]
