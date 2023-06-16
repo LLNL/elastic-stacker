@@ -12,7 +12,7 @@ A main use case is for moving from development done in a PRE environment, and in
 2. `cd tools/elastic-stacker`
 3. Set up Python environment: `pipenv install`
 4. Activate the environment: `pipenv shell`
-5. Concrete-ize the configuration file
+5. Concrete-ize the configuration file, specifically replacing any occurences of `<REDACTED>` with real values:
     ```sh
     cp stacker.example.yaml stacker.yaml
     # Update any configuration options needed:

@@ -134,7 +134,10 @@ class TransformController(ElasticsearchAPIController):
         endpoint = self._build_endpoint(id) + "/_start"
         query_params = {"from": from_time, "timeout": timeout}
         query_params = self._clean_params(query_params)
+
+        logger.debug("starting transform {}".format(id))
         response = self._client.post(endpoint, params=query_params)
+
         return response.json()
 
     def stop(
@@ -161,6 +164,7 @@ class TransformController(ElasticsearchAPIController):
         }
         query_params = self._clean_params(query_params)
 
+        logger.debug("starting transform {}".format(id))
         response = self._client.post(endpoint, params=query_params)
         return response.json()
 
@@ -218,68 +222,66 @@ class TransformController(ElasticsearchAPIController):
         Load transforms from files in the data directory and create them in Elasticsearch.
         """
         working_directory = self._get_working_dir(data_directory, create=False)
-        if working_directory.is_dir():
-            # create a map of all transforms by id
-            transforms_generator = self._depaginate(
-                self.get, key="transforms", page_size=100
-            )
 
-            transforms_map = {
-                transform["id"]: transform for transform in transforms_generator
-            }
+        # create a map of all transforms by id
+        transforms_generator = self._depaginate(
+            self.get, key="transforms", page_size=100
+        )
 
-            stats_file = working_directory / "_stats.json"
-            reference_stats = self._read_file(stats_file)
+        transforms_map = {
+            transform["id"]: transform for transform in transforms_generator
+        }
 
-            current_stats = {
-                t["id"]: t
-                for t in self._depaginate(self.stats, "transforms", page_size=100)
-            }
+        stats_file = working_directory / "_stats.json"
 
-            for transform_file in working_directory.glob("*.json"):
-                if transform_file == stats_file:
-                    continue
-                logger.debug("Loading {}".format(transform_file))
-                transform_id = transform_file.stem
-                with transform_file.open("r") as fh:
-                    loaded_transform = json.load(fh)
-                try:
-                    if transform_id in transforms_map:
-                        logger.info("Transform {} already exists.".format(transform_id))
-                        # the transform already exists; if it's changed we need to delete and recreate it
-                        existing_transform = transforms_map[transform_id]
-                        for key, loaded_value in loaded_transform.items():
-                            if loaded_value != existing_transform[key]:
-                                logger.info(
-                                    "Transform {} differs by key {}, deleting and recreating.".format(
-                                        transform_id, key
-                                    )
+        # TODO: Future work to synchronize transform states
+        # reference_stats = self._read_file(stats_file)
+        # current_stats = {
+        #     t["id"]: t
+        #     for t in self._depaginate(self.stats, "transforms", page_size=100)
+        # }
+
+        transform_files = set(working_directory.glob("*.json")).discard(stats_file)
+        for transform_file in transform_files:
+            logger.debug("Loading {}".format(transform_file))
+            transform_id = transform_file.stem
+            with transform_file.open("r") as fh:
+                loaded_transform = json.load(fh)
+            try:
+                if transform_id in transforms_map:
+                    logger.info("Transform {} already exists.".format(transform_id))
+                    # the transform already exists; if it's changed we need to delete and recreate it
+                    existing_transform = transforms_map[transform_id]
+                    for key, loaded_value in loaded_transform.items():
+                        if loaded_value != existing_transform[key]:
+                            logger.info(
+                                "Transform {} differs by key {}, deleting and recreating.".format(
+                                    transform_id, key
                                 )
-                                self.stop(transform_id, wait_for_completion=True)
-                                self.delete(transform_id)
-                                self.create(
-                                    transform_id,
-                                    loaded_transform,
-                                    defer_validation=True,
-                                )
-                                break
-                    else:
-                        logger.info(
-                            "Creating new transform with id {}".format(transform_id)
-                        )
-                        self.create(
-                            transform_id, loaded_transform, defer_validation=True
-                        )
-                except HTTPStatusError as e:
-                    if allow_failure:
-                        logger.info(
-                            "Experienced an error; continuing because allow_failure is True"
-                        )
-                    else:
-                        raise e
+                            )
+                            self.stop(transform_id, wait_for_completion=True)
+                            self.delete(transform_id)
+                            self.create(
+                                transform_id,
+                                loaded_transform,
+                                defer_validation=True,
+                            )
+                            break
                 else:
-                    if delete_after_import:
-                        transform_file.unlink()
+                    logger.info(
+                        "Creating new transform with id {}".format(transform_id)
+                    )
+                    self.create(transform_id, loaded_transform, defer_validation=True)
+            except HTTPStatusError as e:
+                if allow_failure:
+                    logger.info(
+                        "Experienced an error; continuing because allow_failure is True"
+                    )
+                else:
+                    raise e
+            else:
+                if delete_after_import:
+                    transform_file.unlink()
 
     def dump(
         self,
@@ -295,16 +297,13 @@ class TransformController(ElasticsearchAPIController):
             if include_managed or not transform.get("_meta", {}).get("managed"):
                 # trim off keys that can't be reimported
                 for key in ["authorization", "version", "create_time"]:
-                    if key in transform:
-                        transform.pop(key)
+                    transform.pop(key, None)
                 file_path = working_directory / (transform.pop("id") + ".json")
-                with file_path.open("w") as file:
-                    file.write(json.dumps(transform, indent=4, sort_keys=True))
+                self._write_file(file_path, transform)
 
         # we also need to know whether each transform was started at the time it was dumped
         stats = {}
         for transform in self._depaginate(self.stats, key="transforms", page_size=100):
             stats[transform["id"]] = transform
         transform_stats_file = working_directory / "_stats.json"
-        with transform_stats_file.open("w") as file:
-            file.write(json.dumps(stats, indent=4, sort_keys=True))
+        self._write_file(transform_stats_file, stats)

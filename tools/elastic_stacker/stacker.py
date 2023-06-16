@@ -19,7 +19,6 @@ from kibana.saved_objects import SavedObjectController
 from kibana.agent_policies import AgentPolicyController
 from kibana.package_policies import PackagePolicyController
 
-
 from utils.config import load_config, make_profile
 from utils.client import APIClient
 from utils.logging import configure_logger
@@ -27,7 +26,7 @@ from utils.logging import configure_logger
 logger = logging.getLogger("elastic_stacker")
 
 
-class Stacker:
+class Stacker(object):
     """
     Stacker is a tool for moving Elasticsearch and Kibana configuration
     objects across multiple instances of these services.
@@ -132,9 +131,9 @@ class Stacker:
             logger.warning(
                 "Including experimental objects which do not have a load function yet."
             )
-            valid_controllers.update(self._experimental_controllers)
+            valid_controllers |= self._experimental_controllers
 
-        invalid_types = set(types).difference(set(valid_controllers.keys()))
+        invalid_types = set(types) - set(valid_controllers.keys())
         if invalid_types:
             raise Exception("types {} are invalid".format(invalid_types))
         if len(types) == 0:
@@ -143,7 +142,7 @@ class Stacker:
         dump_arguments = {"include_managed": include_managed}
 
         for type_name in types:
-            logger.warning("exporting {}".format(type_name))
+            logger.info("exporting {}".format(type_name))
             controller = valid_controllers[type_name]
             controller.dump(**dump_arguments)
 
@@ -177,10 +176,10 @@ class Stacker:
             delete_after_import = True
             temp = True
             allow_failure = True
-            if retries is not None:
+            if not retries:
                 retries = 5
 
-        invalid_types = set(types).difference(set(self._controllers.keys()))
+        invalid_types = set(types) - set(self._controllers.keys())
         if invalid_types:
             raise Exception("types {} are invalid".format(invalid_types))
         if len(types) == 0:
@@ -200,7 +199,7 @@ class Stacker:
             "data_directory": working_data_directory,
             "delete_after_import": delete_after_import,
         }
-        for i in range(retries + 1):
+        for _ in range(retries + 1):
             logger.info("beginning attempt no.")
             for type_name in types:
                 logger.warning("importing {}".format(type_name))

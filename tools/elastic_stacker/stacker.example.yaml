@@ -2,7 +2,7 @@
 # if you only have one Elastic stack, put it here
 default:
   options:
-    data_directory: ../../files
+    data_directory: ./stacker_data/
   client:
     verify: /etc/pki/tls/cert.pem
   substitutions:

@@ -40,7 +40,7 @@ class AgentPolicyController(FleetAPIController):
 
     # TODO
     def create(self):
-        pass
+        raise NotImplementedError
 
     # TODO
     def load(
@@ -50,7 +50,7 @@ class AgentPolicyController(FleetAPIController):
         delete_after_import: bool = False,
         **kwargs,
     ):
-        pass
+        raise NotImplementedError
 
     def dump(
         self,
@@ -62,6 +62,7 @@ class AgentPolicyController(FleetAPIController):
 
         for policy in self._depaginate(self.get):
             if include_managed or not policy["is_managed"]:
+                # Policy name often has spaces in it, so slugify it first
                 filename = slugify(policy["name"]) + ".json"
                 file_path = working_directory / filename
                 self._write_file(file_path, policy)
