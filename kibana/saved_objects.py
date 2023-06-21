@@ -96,8 +96,8 @@ class SavedObjectController(GenericController):
         overwrite: bool = None,
         compatibility_mode: bool = None,
         timeout: int = 10,
-        resolve:bool=False,
-        retries:dict=None,
+        resolve: bool = False,
+        retries: dict = None,
     ):
         """
         Import saved objects from a previously exported saved objects file.
@@ -116,15 +116,17 @@ class SavedObjectController(GenericController):
         query_params = self._clean_params(query_params)
 
         if resolve:
-            action="_resolve_import_errors"
-            form_data={"retries": json.dumps(retries)}
+            action = "_resolve_import_errors"
+            form_data = {"retries": json.dumps(retries)}
             query_params.pop("overwrite", None)
         else:
-            action="_import"
-            form_data={}
+            action = "_import"
+            form_data = {}
 
         if space_id is not None:
-            endpoint = "/s/{space}/api/saved_objects/{action}".format(space=space_id, action=action)
+            endpoint = "/s/{space}/api/saved_objects/{action}".format(
+                space=space_id, action=action
+            )
         else:
             endpoint = "/api/saved_objects/{}".format(action)
 
@@ -136,7 +138,6 @@ class SavedObjectController(GenericController):
             upload_filename += ".ndjson"
         else:
             upload_filename = file.name
-
 
         files = {"file": (upload_filename, file, "application/ndjson")}
 
@@ -151,7 +152,7 @@ class SavedObjectController(GenericController):
         overwrite: bool = True,
         delete_after_import: bool = False,
         allow_failure: bool = False,
-        no_resolve_broken: bool=False,
+        no_resolve_broken: bool = False,
         data_directory: os.PathLike = None,
         **kwargs
     ):
@@ -184,7 +185,9 @@ class SavedObjectController(GenericController):
                     create_new_copies=(not overwrite),
                 )
                 logger.info(
-                    "Successfully imported {count} out of {total} saved objects.".format(count=results["successCount"], total=object_count)
+                    "Successfully imported {count} out of {total} saved objects.".format(
+                        count=results["successCount"], total=object_count
+                    )
                 )
                 failed_ids = []
                 retries = []
@@ -203,12 +206,12 @@ class SavedObjectController(GenericController):
                     logger.warning(msg, extra={"error": failure["error"]})
                     failed_ids.append(failure["id"])
                     retries.append(
-                            {
-                                "id": failure["id"],
-                                "type": failure["type"],
-                                "overwrite": overwrite,
-                                "ignoreMissingReferences": True
-                            }
+                        {
+                            "id": failure["id"],
+                            "type": failure["type"],
+                            "overwrite": overwrite,
+                            "ignoreMissingReferences": True,
+                        }
                     )
 
                 if failed_ids and not no_resolve_broken:
@@ -222,8 +225,18 @@ class SavedObjectController(GenericController):
                             }
                         )
                     intermediate_file.seek(0)
-                    resolutions = self.import_objects(intermediate_file, overwrite=overwrite, create_new_copies=(not overwrite), resolve=True, retries=retries)
-                    logger.info("Successfully retried {} objects.".format(resolutions["successCount"]))
+                    resolutions = self.import_objects(
+                        intermediate_file,
+                        overwrite=overwrite,
+                        create_new_copies=(not overwrite),
+                        resolve=True,
+                        retries=retries,
+                    )
+                    logger.info(
+                        "Successfully retried {} objects.".format(
+                            resolutions["successCount"]
+                        )
+                    )
             except httpx.HTTPStatusError as e:
                 if allow_failure:
                     logger.info(
