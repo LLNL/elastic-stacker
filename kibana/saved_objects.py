@@ -169,6 +169,7 @@ class SavedObjectController(GenericController):
                 logger.info(
                     "Successfully imported {count} out of {total} saved objects."
                 )
+                failed_ids = []
                 for failure in results["errors"]:
                     if "title" in failure["meta"]:
                         obj_name = failure["meta"]["title"]
@@ -182,6 +183,7 @@ class SavedObjectController(GenericController):
                         err_type=failure["error"]["type"],
                     )
                     logger.warning(msg, extra={"error": failure["error"]})
+                    failed_ids.append(failure["id"])
 
             except httpx.HTTPStatusError as e:
                 if allow_failure:
@@ -192,7 +194,10 @@ class SavedObjectController(GenericController):
                     raise e
             else:
                 if delete_after_import:
-                    shutil.rmtree(working_directory)
+                    for object_file in working_directory.glob("*/*.json"):
+                        obj = self._read_file(object_file)
+                        if obj["id"] not in failed_ids:
+                            object_file.unlink()
 
     def dump(self, *types: str, data_directory: os.PathLike = None, **kwargs):
         """
