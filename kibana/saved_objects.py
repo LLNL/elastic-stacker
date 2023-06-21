@@ -191,7 +191,7 @@ class SavedObjectController(GenericController):
                 )
                 failed_ids = []
                 retries = []
-                for failure in results["errors"]:
+                for failure in results.pop("errors", []):
                     if "title" in failure["meta"]:
                         obj_name = failure["meta"]["title"]
                     elif "name" in failure["meta"]:
@@ -205,38 +205,36 @@ class SavedObjectController(GenericController):
                     )
                     logger.warning(msg, extra={"error": failure["error"]})
                     failed_ids.append(failure["id"])
-                    retries.append(
-                        {
-                            "id": failure["id"],
-                            "type": failure["type"],
-                            "overwrite": overwrite,
-                            "ignoreMissingReferences": True,
-                        }
-                    )
-
-                if failed_ids and not no_resolve_broken:
-                    # i dont use no double negatives
-                    for success in results["successResults"]:
+                    if not no_resolve_broken:
                         retries.append(
                             {
-                                "id": success["id"],
-                                "type": success["type"],
+                                "id": failure["id"],
+                                "type": failure["type"],
                                 "overwrite": overwrite,
+                                "ignoreMissingReferences": True,
                             }
                         )
-                    intermediate_file.seek(0)
-                    resolutions = self.import_objects(
-                        intermediate_file,
-                        overwrite=overwrite,
-                        create_new_copies=(not overwrite),
-                        resolve=True,
-                        retries=retries,
+                for success in results["successResults"]:
+                    retries.append(
+                        {
+                            "id": success["id"],
+                            "type": success["type"],
+                            "overwrite": overwrite,
+                        }
                     )
-                    logger.info(
-                        "Successfully retried {} objects.".format(
-                            resolutions["successCount"]
-                        )
+                intermediate_file.seek(0)
+                resolutions = self.import_objects(
+                    intermediate_file,
+                    overwrite=overwrite,
+                    create_new_copies=(not overwrite),
+                    resolve=True,
+                    retries=retries,
+                )
+                logger.info(
+                    "Successfully retried {} objects; {} retries failed.".format(
+                        resolutions["successCount"], len(resolutions.pop("errors", []))
                     )
+                )
             except httpx.HTTPStatusError as e:
                 if allow_failure:
                     logger.info(
