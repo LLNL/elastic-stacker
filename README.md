@@ -38,4 +38,10 @@ git diff
 # Add and commit any changes
 git add $(git rev-parse --show-toplevel)/files/
 git commit -m"Updated elastic repo with exported content"
-```
+```i
+
+## License
+
+Stacker is released under the Apache 2.0 license with LLVM exception. For more details see the LICENSE file.
+
+LLNL-CODE-850537
