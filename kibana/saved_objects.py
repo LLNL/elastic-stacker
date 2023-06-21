@@ -4,6 +4,7 @@ import json
 import shutil
 import typing
 import tempfile
+import json
 
 import httpx
 from slugify import slugify
@@ -149,19 +150,39 @@ class SavedObjectController(GenericController):
         with tempfile.SpooledTemporaryFile(
             mode="ab+", max_size=intermediate_file_max_size
         ) as intermediate_file:
+            object_count = 0
             for object_file in working_directory.glob("*/*.json"):
                 object = self._read_file(object_file)
                 object_string = json.dumps(object)
                 intermediate_file.write(str.encode(object_string))
                 intermediate_file.write(b"\n")
+                object_count += 1
             # jump back to the start of the file buffer
+            logger.debug("Preparing to load {count} objects".format(count=object_count))
             intermediate_file.seek(0)
             try:
-                self.import_objects(
+                results = self.import_objects(
                     intermediate_file,
                     overwrite=overwrite,
                     create_new_copies=(not overwrite),
                 )
+                logger.info(
+                    "Successfully imported {count} out of {total} saved objects."
+                )
+                for failure in results["errors"]:
+                    if "title" in failure["meta"]:
+                        obj_name = failure["meta"]["title"]
+                    elif "name" in failure["meta"]:
+                        obj_name = failure["meta"]["name"]
+                    else:
+                        obj_name = failure["id"]
+                    msg = "Failed to import {obj_type} {obj_name} due to an error of type {err_type}".format(
+                        obj_type=failure["type"],
+                        obj_name=obj_name,
+                        err_type=failure["error"]["type"],
+                    )
+                    logger.warning(msg, extra={"error": failure["error"]})
+
             except httpx.HTTPStatusError as e:
                 if allow_failure:
                     logger.info(
