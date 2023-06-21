@@ -96,15 +96,17 @@ class SavedObjectController(GenericController):
         overwrite: bool = None,
         compatibility_mode: bool = None,
         timeout: int = 10,
+        resolve:bool=False,
+        retries:dict=None,
     ):
         """
         Import saved objects from a previously exported saved objects file.
         https://www.elastic.co/guide/en/kibana/current/saved-objects-api-import.html
+
+        Also resolves import conflicts, because the API is almost identical:
+        https://www.elastic.co/guide/en/kibana/current/saved-objects-api-resolve-import-errors.html
+
         """
-        if space_id is not None:
-            endpoint = "/s/{}/api/saved_objects/_import".format(space_id)
-        else:
-            endpoint = "/api/saved_objects/_import"
 
         query_params = {
             "createNewCopies": create_new_copies,
@@ -113,19 +115,33 @@ class SavedObjectController(GenericController):
         }
         query_params = self._clean_params(query_params)
 
+        if resolve:
+            action="_resolve_import_errors"
+            form_data={"retries": json.dumps(retries)}
+            query_params.pop("overwrite", None)
+        else:
+            action="_import"
+            form_data={}
+
+        if space_id is not None:
+            endpoint = "/s/{space}/api/saved_objects/{action}".format(space=space_id, action=action)
+        else:
+            endpoint = "/api/saved_objects/{}".format(action)
+
         # temporary files get unhelpful or blank names, and Kibana expects specific file extensions on the name
         # so we'll pretend whatever stream we're fed comes from an ndjson file.
-        if not file.name:
+        if not (file.name and isinstance(file.name, str)):
             upload_filename = "export.ndjson"
         elif not file.name.endswith(".ndjson"):
             upload_filename += ".ndjson"
         else:
             upload_filename = file.name
 
+
         files = {"file": (upload_filename, file, "application/ndjson")}
 
         response = self._client.post(
-            endpoint, params=query_params, files=files, timeout=timeout
+            endpoint, params=query_params, files=files, data=form_data, timeout=timeout
         )
         return response.json()
 
@@ -135,6 +151,7 @@ class SavedObjectController(GenericController):
         overwrite: bool = True,
         delete_after_import: bool = False,
         allow_failure: bool = False,
+        no_resolve_broken: bool=False,
         data_directory: os.PathLike = None,
         **kwargs
     ):
@@ -170,6 +187,7 @@ class SavedObjectController(GenericController):
                     "Successfully imported {count} out of {total} saved objects.".format(count=results["successCount"], total=object_count)
                 )
                 failed_ids = []
+                retries = []
                 for failure in results["errors"]:
                     if "title" in failure["meta"]:
                         obj_name = failure["meta"]["title"]
@@ -184,7 +202,28 @@ class SavedObjectController(GenericController):
                     )
                     logger.warning(msg, extra={"error": failure["error"]})
                     failed_ids.append(failure["id"])
+                    retries.append(
+                            {
+                                "id": failure["id"],
+                                "type": failure["type"],
+                                "overwrite": overwrite,
+                                "ignoreMissingReferences": True
+                            }
+                    )
 
+                if failed_ids and not no_resolve_broken:
+                    # i dont use no double negatives
+                    for success in results["successResults"]:
+                        retries.append(
+                            {
+                                "id": success["id"],
+                                "type": success["type"],
+                                "overwrite": overwrite,
+                            }
+                        )
+                    intermediate_file.seek(0)
+                    resolutions = self.import_objects(intermediate_file, overwrite=overwrite, create_new_copies=(not overwrite), resolve=True, retries=retries)
+                    logger.info("Successfully retried {} objects.".format(resolutions["successCount"]))
             except httpx.HTTPStatusError as e:
                 if allow_failure:
                     logger.info(
@@ -222,13 +261,17 @@ class SavedObjectController(GenericController):
             obj_type_output_dir.mkdir(parents=True, exist_ok=True)
 
         with self._export_stream(
-            types=types, exclude_export_details=True, stream=True
+            types=types, exclude_export_details=False, stream=True
         ) as export_stream:
             for line in export_stream.iter_lines():
                 # some things have a "title" and others have a "name", and others have only have an id
                 # in order to get a meaningful filename for version control, we have to pick a different field for each.
                 # three nested dict.get() calls for three different fields to try
                 obj = json.loads(line)
+                if "id" not in obj:
+                    # it's the export details
+                    # TODO: log this and go on your merry way
+                    continue
                 attrs = obj["attributes"]
                 obj_name = attrs.get(
                     "title", attrs.get("name", obj.get("id", "NO_NAME"))
