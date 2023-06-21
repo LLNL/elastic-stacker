@@ -167,7 +167,7 @@ class SavedObjectController(GenericController):
                     create_new_copies=(not overwrite),
                 )
                 logger.info(
-                    "Successfully imported {count} out of {total} saved objects."
+                    "Successfully imported {count} out of {total} saved objects.".format(count=results["successCount"], total=object_count)
                 )
                 failed_ids = []
                 for failure in results["errors"]:
