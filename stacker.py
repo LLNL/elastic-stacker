@@ -116,7 +116,8 @@ class Stacker(object):
         self,
         *types: str,
         include_managed: bool = False,
-        include_experimental: bool = False
+        include_experimental: bool = False,
+        data_directory: os.PathLike = None
     ):
         """
         Dumps all supported resource types, or the ones specified with the
@@ -139,7 +140,7 @@ class Stacker(object):
         if len(types) == 0:
             types = valid_controllers.keys()
 
-        dump_arguments = {"include_managed": include_managed}
+        dump_arguments = {"include_managed": include_managed, "data_directory": data_directory}
 
         for type_name in types:
             logger.info("exporting {}".format(type_name))
