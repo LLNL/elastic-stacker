@@ -5,7 +5,7 @@ from httpx import HTTPStatusError
 
 from slugify import slugify
 
-from utils.controller import FleetAPIController
+from elastic_stacker.utils.controller import FleetAPIController
 
 logger = logging.getLogger("elastic_stacker")
 

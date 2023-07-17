@@ -8,7 +8,7 @@ import tempfile
 import httpx
 from slugify import slugify
 
-from utils.controller import GenericController
+from elastic_stacker.utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 

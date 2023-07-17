@@ -10,18 +10,18 @@ import tempfile
 import fire
 
 # local project
-from elasticsearch.indices import IndexController
-from elasticsearch.pipelines import PipelineController
-from elasticsearch.transforms import TransformController
-from elasticsearch.watches import WatchController
-from elasticsearch.enrich_policies import EnrichPolicyController
-from kibana.saved_objects import SavedObjectController
-from kibana.agent_policies import AgentPolicyController
-from kibana.package_policies import PackagePolicyController
+from .elasticsearch.indices import IndexController
+from .elasticsearch.pipelines import PipelineController
+from .elasticsearch.transforms import TransformController
+from .elasticsearch.watches import WatchController
+from .elasticsearch.enrich_policies import EnrichPolicyController
+from .kibana.saved_objects import SavedObjectController
+from .kibana.agent_policies import AgentPolicyController
+from .kibana.package_policies import PackagePolicyController
 
-from utils.config import load_config, make_profile
-from utils.client import APIClient
-from utils.logging import configure_logger
+from .utils.config import load_config, make_profile
+from .utils.client import APIClient
+from .utils.logging import configure_logger
 
 logger = logging.getLogger("elastic_stacker")
 
