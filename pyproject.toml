@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "elastic_stacker"
+requires-python = ">=3.9"
+dependencies = [
+    "httpx",
+    "marshmallow",
+    "python-slugify",
+    "fire",
+    "pyyaml",
+    "ecs-logging",
+]
+dynamic = ["version"]
+
+[project.scripts]
+stacker = "elastic_stacker:main"
+

@@ -1,19 +1,16 @@
 [[source]]
-url = "https://wci-repo.llnl.gov/repository/pypi-group/simple"
-verify_ssl = false
-name = "pip_conf_index_global"
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
 
 [packages]
-httpx = "*"
-marshmallow = "*"
-python-slugify = "*"
-fire = "*"
-pyyaml = "*"
-ecs-logging = "*"
+elastic-stacker = {editable = true, path = "."}
 
 [dev-packages]
 black = "*"
 ipython = "*"
 flake8 = "*"
 
-# Requires python >= 3.9
+[requires]
+python_version = "3.9"
+python_full_version = "3.9.6"
