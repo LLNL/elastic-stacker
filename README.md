@@ -36,7 +36,7 @@ Running the tools
 # Export should go in to the `files/` directory at the top of this repo
 # this is so that the resulting exported objects can be tracked in git.
 # You can also set the data directory in the config file (see the example).
-./stacker.py system_dump -p pre --data-directory $(git rev-parse --show-toplevel)/files/
+stacker system_dump -p pre --data-directory $(git rev-parse --show-toplevel)/files/
 
 # Check the changes that resulted from the export, make sure things look expected
 git diff
