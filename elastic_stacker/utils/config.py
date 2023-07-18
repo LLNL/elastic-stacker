@@ -22,6 +22,7 @@ CONFIG_FILE_PRECEDENCE = [
 ]
 
 GLOBAL_DEFAULT_PROFILE = {
+    "client": {"timeout": 15.0},
     "elasticsearch": {"base_url": "https://localhost:9200"},
     "kibana": {"base_url": "https://localhost:5601"},
     "options": {
