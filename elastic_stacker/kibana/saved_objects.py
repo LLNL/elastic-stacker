@@ -154,7 +154,7 @@ class SavedObjectController(GenericController):
         allow_failure: bool = False,
         no_resolve_broken: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Loads Saved Objects from files on disk and imports them into Kibana.
