@@ -79,7 +79,11 @@ def load_config(path: os.PathLike = None):
     Find, load and validate the config file.
     """
     if path is None:
-        path = find_config()
+        try:
+          path = find_config()
+        except FileNotFoundError:
+          logger.warning("No config found in any of {}. You can generate a starter config using `stacker starter_config`. Falling back to default localhost.")
+          return {}
     else:
         path = Path(path)
     raw_config = read_config(path)

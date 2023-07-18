@@ -1,10 +1,10 @@
 # these values will be used if no client is specified
 # if you only have one Elastic stack, put it here
 default:
+#  client:
+#    verify: /etc/pki/tls/cert.pem
   options:
     data_directory: ./stacker_data/
-  client:
-    verify: /etc/pki/tls/cert.pem
   substitutions:
     # remember to keep your regular expressions in single-quoted strings
     # or your backslashes will be interpreted as escape sequences.

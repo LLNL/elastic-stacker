@@ -3,6 +3,8 @@ import logging
 import os
 import shutil
 import tempfile
+import importlib.resources
+from pathlib import Path
 
 # local project
 from .elasticsearch.indices import IndexController
@@ -106,6 +108,22 @@ class Stacker(object):
             "package_policies": self.package_policies,
             "agent_policies": self.agent_policies,
         }
+
+    def starter_config(self, output: os.PathLike = "~/.config/stacker.yaml", force: bool=False):
+        package_resources = importlib.resources.files("elastic_stacker")
+        example_config = package_resources / "stacker.example.yaml"
+        with example_config.open("r") as fh:
+            example = fh.read()
+
+        output_file = Path(output).expanduser()
+        if output_file.is_dir():
+            raise IsADirectoryError(output)
+        if output_file.exists() and not force:
+            raise FileExistsError("Run again with force=true to overwrite.")
+
+        logger.warn("Writing example config file to {}".format(output_file))
+        with output_file.open("w") as fh:
+            fh.write(example)
 
     def system_dump(
         self,
