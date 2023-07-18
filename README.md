@@ -16,7 +16,7 @@ pip install git+https://github.com/LLNL/elastic-stacker.git@main
 ## Contributing
 
 1. Clone the repository
-3. Set up Python environment: `pipenv install -e .`
+3. Set up Python environment: `pipenv install --dev`
 4. Activate the environment: `pipenv shell`
 5. Concrete-ize the configuration file, specifically replacing any occurences of `<REDACTED>` with real values:
     ```sh
