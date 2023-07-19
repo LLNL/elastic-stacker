@@ -41,7 +41,7 @@ class RoleMappingController(ElasticsearchAPIController):
         endpoint = self._build_endpoint(name)
 
         response = self._client.put(
-            endpoint, json=pipeline
+            endpoint, json=role
         )
         return response.json()
 
