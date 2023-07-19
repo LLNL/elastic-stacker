@@ -18,7 +18,7 @@ class RoleMappingController(ElasticsearchAPIController):
     _resource_directory = "role_mappings"
 
     def _build_endpoint(self, name: str = "") -> str:
-        return base_endpoint + name
+        return self._base_endpoint if name is None else self._base_endpoint + name
 
     def get(self, name: str = None) -> dict:
         """
@@ -55,9 +55,9 @@ class RoleMappingController(ElasticsearchAPIController):
         """
         working_directory = self._get_working_dir(data_directory, create=True)
         role_mappings = self.get()
-        for name, role_mapping in roles_mappings.items():
+        for name, role_mapping in role_mappings.items():
             file_path = working_directory / (name + ".json")
-            self._write_file(file_path, pipeline)
+            self._write_file(file_path, role_mapping)
 
     def load(
         self,
