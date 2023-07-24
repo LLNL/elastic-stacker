@@ -10,6 +10,8 @@ from .elasticsearch.pipelines import PipelineController
 from .elasticsearch.transforms import TransformController
 from .elasticsearch.watches import WatchController
 from .elasticsearch.enrich_policies import EnrichPolicyController
+from .elasticsearch.roles import RoleController
+from .elasticsearch.role_mappings import RoleMappingController
 from .kibana.saved_objects import SavedObjectController
 from .kibana.agent_policies import AgentPolicyController
 from .kibana.package_policies import PackagePolicyController
@@ -36,6 +38,8 @@ class Stacker(object):
     transforms: TransformController
     watches: WatchController
     enrich_policies: EnrichPolicyController
+    roles: RoleController
+    role_mappings: RoleMappingController
 
     def __init__(
         self,
@@ -82,6 +86,8 @@ class Stacker(object):
             kibana_client, subs=subs, **self._options
         )
         self.indices = IndexController(elasticsearch_client, subs=subs, **self._options)
+        self.roles = RoleController(elasticsearch_client, subs=subs, **self._options)
+        self.role_mappings = RoleMappingController(elasticsearch_client, subs=subs, **self._options)
         self.saved_objects = SavedObjectController(
             kibana_client, subs=subs, **self._options
         )
@@ -99,6 +105,8 @@ class Stacker(object):
             "indices": self.indices,
             "saved_objects": self.saved_objects,
             "watches": self.watches,
+            "roles": self.roles,
+            "role_mappings": self.role_mappings,
             "pipelines": self.pipelines,
             "transforms": self.transforms,
             "enrich_policies": self.enrich_policies,
