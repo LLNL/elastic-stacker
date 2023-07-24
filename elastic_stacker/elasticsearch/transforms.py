@@ -4,7 +4,7 @@ import os
 
 from httpx import HTTPStatusError
 
-from utils.controller import ElasticsearchAPIController
+from elastic_stacker.utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
 

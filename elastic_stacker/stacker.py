@@ -1,27 +1,22 @@
-#! /bin/env python3
-
 # stdlib
 import logging
 import os
 import shutil
 import tempfile
 
-# PyPI
-import fire
-
 # local project
-from elasticsearch.indices import IndexController
-from elasticsearch.pipelines import PipelineController
-from elasticsearch.transforms import TransformController
-from elasticsearch.watches import WatchController
-from elasticsearch.enrich_policies import EnrichPolicyController
-from kibana.saved_objects import SavedObjectController
-from kibana.agent_policies import AgentPolicyController
-from kibana.package_policies import PackagePolicyController
+from .elasticsearch.indices import IndexController
+from .elasticsearch.pipelines import PipelineController
+from .elasticsearch.transforms import TransformController
+from .elasticsearch.watches import WatchController
+from .elasticsearch.enrich_policies import EnrichPolicyController
+from .kibana.saved_objects import SavedObjectController
+from .kibana.agent_policies import AgentPolicyController
+from .kibana.package_policies import PackagePolicyController
 
-from utils.config import load_config, make_profile
-from utils.client import APIClient
-from utils.logging import configure_logger
+from .utils.config import load_config, make_profile
+from .utils.client import APIClient
+from .utils.logging import configure_logger
 
 logger = logging.getLogger("elastic_stacker")
 
@@ -205,11 +200,3 @@ class Stacker(object):
                 logger.warning("importing {}".format(type_name))
                 controller = self._controllers[type_name]
                 controller.load(**load_arguments)
-
-
-def main():
-    fire.Fire(Stacker)
-
-
-if __name__ == "__main__":
-    main()
