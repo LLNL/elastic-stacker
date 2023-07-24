@@ -130,6 +130,7 @@ class APIClientConfigSchema(BaseSchema):
     verify = PathField(validate=PathValidator(dir_ok=False, must_exist=True))
     auth = fields.Nested(BasicAuthSchema())
     tls = fields.Nested(TLSConfigSchema())
+    timeout = fields.Float()
 
     @post_load
     def fix_tls(self, client_settings, **kwargs):

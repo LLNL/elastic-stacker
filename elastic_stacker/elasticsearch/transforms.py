@@ -29,7 +29,7 @@ class TransformController(ElasticsearchAPIController):
         allow_no_match: bool = None,
         exclude_generated: bool = None,
         offset: int = None,
-        size: int = None
+        size: int = None,
     ):
         """
         Get some number of transforms by ID.
@@ -69,7 +69,7 @@ class TransformController(ElasticsearchAPIController):
         *ids: str,
         allow_no_match: bool = None,
         offset: int = None,
-        size: int = None
+        size: int = None,
     ):
         """
         Get transform statistics, including the running state of the transform.
@@ -216,7 +216,7 @@ class TransformController(ElasticsearchAPIController):
         delete_after_import: bool = False,
         allow_failure: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Load transforms from files in the data directory and create them in Elasticsearch.
@@ -287,7 +287,7 @@ class TransformController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Dump all transforms from Elasticsearch out to files in the data directory.

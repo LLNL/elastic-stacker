@@ -80,7 +80,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         allow_failure: bool = False,
         delete_after_import: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """
         Load enrich policies from files in the data directory and create them

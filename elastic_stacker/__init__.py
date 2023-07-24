@@ -1,6 +1,7 @@
 import fire
 from .stacker import Stacker
 
+
 def main():
     fire.Fire(Stacker)
 

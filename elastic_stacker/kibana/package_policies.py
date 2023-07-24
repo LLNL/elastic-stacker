@@ -60,7 +60,7 @@ class PackagePolicyController(FleetAPIController):
         delete_after_import: bool = False,
         allow_failure: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs
+        **kwargs,
     ):
         raise NotImplementedError()
         working_directory = self._get_working_dir(data_directory, create=False)

@@ -44,6 +44,7 @@ class Stacker(object):
         elasticsearch: str = None,
         kibana: str = None,
         ca: os.PathLike = None,
+        timeout: float = None,
         log_level: str = None,
         ecs_log: bool = None,
     ):
@@ -53,7 +54,7 @@ class Stacker(object):
             # TODO: add CLI arguments here to override configuration values, for example
             "elasticsearch": {"base_url": elasticsearch},
             "kibana": {"base_url": kibana},
-            "client": {"verify": ca},
+            "client": {"verify": ca, "timeout": timeout},
             "log": {"level": log_level, "ecs": ecs_log},
         }
 
@@ -111,7 +112,8 @@ class Stacker(object):
         self,
         *types: str,
         include_managed: bool = False,
-        include_experimental: bool = False
+        include_experimental: bool = False,
+        data_directory: os.PathLike = None
     ):
         """
         Dumps all supported resource types, or the ones specified with the
@@ -134,7 +136,7 @@ class Stacker(object):
         if len(types) == 0:
             types = valid_controllers.keys()
 
-        dump_arguments = {"include_managed": include_managed}
+        dump_arguments = {"include_managed": include_managed, "data_directory": data_directory}
 
         for type_name in types:
             logger.info("exporting {}".format(type_name))
@@ -149,7 +151,7 @@ class Stacker(object):
         delete_after_import: bool = False,
         retries: int = 0,
         allow_failure: bool = False,
-        stubborn: bool = False
+        stubborn: bool = False,
     ):
         """
         Load all resources from a previous dump into the specified Elastic
