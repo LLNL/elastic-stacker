@@ -132,19 +132,19 @@ class APIClientConfigSchema(BaseSchema):
     tls = fields.Nested(TLSConfigSchema())
     timeout = fields.Float()
 
-    @post_load
-    def fix_tls(self, client_settings, **kwargs):
-        # httpx `cert` argument is a tuple of (cert, key) and TOML doesn't have tuples
-        # so it got a nested table instead
-        if "tls" in client_settings:
-            tls = client_settings["tls"]
-            if tls["cert"]:
-                if tls["key"]:
-                    client_settings["cert"] = (tls["cert"], tls["key"])
-                else:
-                    client_settings["cert"] = tls["cert"]
-            del client_settings["tls"]
-        return client_settings
+    # @post_load
+    # def fix_tls(self, client_settings, **kwargs):
+    #     # httpx `cert` argument is a tuple of (cert, key) and YAML doesn't have tuples
+    #     # so it got a nested table instead
+    #     if "tls" in client_settings:
+    #         tls = client_settings["tls"]
+    #         if tls["cert"]:
+    #             if tls["key"]:
+    #                 client_settings["cert"] = (tls["cert"], tls["key"])
+    #             else:
+    #                 client_settings["cert"] = tls["cert"]
+    #         del client_settings["tls"]
+    #     return client_settings
 
 
 class ControllerOptionsSchema(BaseSchema):
