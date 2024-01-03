@@ -6,6 +6,7 @@ import tempfile
 
 # local project
 from .elasticsearch.indices import IndexController
+from .elasticsearch.index_templates import IndexTemplateController
 from .elasticsearch.component_templates import ComponentTemplateController
 from .elasticsearch.pipelines import PipelineController
 from .elasticsearch.transforms import TransformController
@@ -34,6 +35,7 @@ class Stacker(object):
     package_policies: PackagePolicyController
     agent_policies: AgentPolicyController
     indices: IndexController
+    index_templates: IndexTemplateController
     component_templates: ComponentTemplateController
     saved_objects: SavedObjectController
     pipelines: PipelineController
@@ -88,6 +90,9 @@ class Stacker(object):
             kibana_client, subs=subs, **self._options
         )
         self.indices = IndexController(elasticsearch_client, subs=subs, **self._options)
+        self.index_templates = IndexTemplateController(
+            elasticsearch_client, subs=subs, **self._options
+        )
         self.component_templates = ComponentTemplateController(
             elasticsearch_client, subs=subs, **self._options
         )
@@ -111,6 +116,7 @@ class Stacker(object):
         self._controllers = {
             "indices": self.indices,
             "component_templates": self.component_templates,
+            "index_templates": self.index_templates,
             "saved_objects": self.saved_objects,
             "watches": self.watches,
             "roles": self.roles,
