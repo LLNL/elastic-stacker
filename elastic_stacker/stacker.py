@@ -6,6 +6,7 @@ import tempfile
 
 # local project
 from .elasticsearch.indices import IndexController
+from .elasticsearch.component_templates import ComponentTemplateController
 from .elasticsearch.pipelines import PipelineController
 from .elasticsearch.transforms import TransformController
 from .elasticsearch.watches import WatchController
@@ -33,6 +34,7 @@ class Stacker(object):
     package_policies: PackagePolicyController
     agent_policies: AgentPolicyController
     indices: IndexController
+    component_templates: ComponentTemplateController
     saved_objects: SavedObjectController
     pipelines: PipelineController
     transforms: TransformController
@@ -86,8 +88,13 @@ class Stacker(object):
             kibana_client, subs=subs, **self._options
         )
         self.indices = IndexController(elasticsearch_client, subs=subs, **self._options)
+        self.component_templates = ComponentTemplateController(
+            elasticsearch_client, subs=subs, **self._options
+        )
         self.roles = RoleController(elasticsearch_client, subs=subs, **self._options)
-        self.role_mappings = RoleMappingController(elasticsearch_client, subs=subs, **self._options)
+        self.role_mappings = RoleMappingController(
+            elasticsearch_client, subs=subs, **self._options
+        )
         self.saved_objects = SavedObjectController(
             kibana_client, subs=subs, **self._options
         )
@@ -103,6 +110,7 @@ class Stacker(object):
         )
         self._controllers = {
             "indices": self.indices,
+            "component_templates": self.component_templates,
             "saved_objects": self.saved_objects,
             "watches": self.watches,
             "roles": self.roles,
@@ -121,7 +129,7 @@ class Stacker(object):
         *types: str,
         include_managed: bool = False,
         include_experimental: bool = False,
-        data_directory: os.PathLike = None
+        data_directory: os.PathLike = None,
     ):
         """
         Dumps all supported resource types, or the ones specified with the
@@ -144,7 +152,10 @@ class Stacker(object):
         if len(types) == 0:
             types = valid_controllers.keys()
 
-        dump_arguments = {"include_managed": include_managed, "data_directory": data_directory}
+        dump_arguments = {
+            "include_managed": include_managed,
+            "data_directory": data_directory,
+        }
 
         for type_name in types:
             logger.info("exporting {}".format(type_name))
