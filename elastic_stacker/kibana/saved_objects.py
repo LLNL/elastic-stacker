@@ -267,10 +267,6 @@ class SavedObjectController(GenericController):
 
         working_directory = self._get_working_dir(data_directory, create=True)
 
-        for obj_type in types:
-            obj_type_output_dir = working_directory / obj_type
-            obj_type_output_dir.mkdir(parents=True, exist_ok=True)
-
         with self._export_stream(
             types=types, exclude_export_details=False, stream=True
         ) as export_stream:
@@ -288,5 +284,8 @@ class SavedObjectController(GenericController):
                     "title", attrs.get("name", obj.get("id", "NO_NAME"))
                 )
                 file_name = slugify(obj_name) + ".json"
-                output_file = working_directory / obj["type"] / file_name
+                object_type_dir = working_directory / obj["type"]
+                if not object_type_dir.is_dir():
+                  object_type_dir.mkdir(parents=True)
+                output_file =  object_type_dir / file_name
                 self._write_file(output_file, obj)
