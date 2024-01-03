@@ -100,8 +100,9 @@ class IndexTemplateController(ElasticsearchAPIController):
         working_directory = self._get_working_dir(data_directory, create=False)
 
         for template_file in working_directory.glob("*.json"):
-            template = self._read_file(template_file)
-            template_name = template_file.stem
+            contents = self._read_file(template_file)
+            template = contents["index_template"]
+            template_name = contents["name"]
             try:
                 self.create(template_name, template)
             except HTTPStatusError as e:
