@@ -7,16 +7,6 @@ from elastic_stacker.utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
 
-MANAGED_TEMPLATE_NAMES = {
-    "logs-mappings",
-    "logs-settings",
-    "metrics-mappings",
-    "metrics-settings",
-    "metrics-tsdb-settings",
-    "synthetics-mapping",
-    "synthetics-settings",
-}
-
 
 class ComponentTemplateController(ElasticsearchAPIController):
     """
@@ -89,9 +79,11 @@ class ComponentTemplateController(ElasticsearchAPIController):
         Dump all component templates on the system to files in the data directory
         """
         working_directory = self._get_working_dir(data_directory, create=True)
-        templates = self.get()
-        for name, template in templates.items():
-            if include_managed or name not in MANAGED_TEMPLATE_NAMES:
+        templates = self.get()["component_templates"]
+        for template in templates:
+            name = template["name"]
+            managed = template["component_template"].get("_meta", {}).get("managed")
+            if include_managed or not managed:
                 file_path = working_directory / (name + ".json")
                 self._write_file(file_path, template)
 

@@ -78,11 +78,13 @@ class IndexTemplateController(ElasticsearchAPIController):
         Dump all index templates on the system to files in the data directory
         """
         working_directory = self._get_working_dir(data_directory, create=True)
-        templates = self.get()
-        for name, template in templates.items():
-            if include_managed or name not in MANAGED_TEMPLATE_NAMES:
-                file_path = working_directory / (name + ".json")
-                self._write_file(file_path, template)
+        templates = self.get()["index_templates"]
+        for template in templates:
+          # the managed field is very deeply nested and all of the keys above it may or may not exist
+          template_managed = template["index_template"].get("template", {}).get("mappings", {}).get("_meta", {}).get("managed", False)
+          if include_managed or not template_managed:
+            file_path = working_directory / (template["name"] + ".json")
+            self._write_file(file_path, template)
 
     def load(
         self,
