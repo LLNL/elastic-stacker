@@ -7,6 +7,7 @@ from elastic_stacker.utils.controller import ElasticsearchAPIController
 
 logger = logging.getLogger("elastic_stacker")
 
+
 class IndexTemplateController(ElasticsearchAPIController):
     """
     ComponentTemplateController manages the import/export of index templates.
@@ -80,11 +81,17 @@ class IndexTemplateController(ElasticsearchAPIController):
         working_directory = self._get_working_dir(data_directory, create=True)
         templates = self.get()["index_templates"]
         for template in templates:
-          # the managed field is very deeply nested and all of the keys above it may or may not exist
-          template_managed = template["index_template"].get("template", {}).get("mappings", {}).get("_meta", {}).get("managed", False)
-          if include_managed or not template_managed:
-            file_path = working_directory / (template["name"] + ".json")
-            self._write_file(file_path, template)
+            # the managed field is very deeply nested and all of the keys above it may or may not exist
+            template_managed = (
+                template["index_template"]
+                .get("template", {})
+                .get("mappings", {})
+                .get("_meta", {})
+                .get("managed", False)
+            )
+            if include_managed or not template_managed:
+                file_path = working_directory / (template["name"] + ".json")
+                self._write_file(file_path, template)
 
     def load(
         self,
