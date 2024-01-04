@@ -40,9 +40,7 @@ class RoleController(ElasticsearchAPIController):
         """
         endpoint = self._build_endpoint(name)
 
-        response = self._client.put(
-            endpoint, json=role
-        )
+        response = self._client.put(endpoint, json=role)
         return response.json()
 
     def dump(

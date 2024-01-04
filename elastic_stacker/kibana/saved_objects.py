@@ -286,6 +286,6 @@ class SavedObjectController(GenericController):
                 file_name = slugify(obj_name) + ".json"
                 object_type_dir = working_directory / obj["type"]
                 if not object_type_dir.is_dir():
-                  object_type_dir.mkdir(parents=True)
-                output_file =  object_type_dir / file_name
+                    object_type_dir.mkdir(parents=True)
+                output_file = object_type_dir / file_name
                 self._write_file(output_file, obj)

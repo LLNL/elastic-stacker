@@ -41,12 +41,12 @@ class APIClient(httpx.Client):
 
     def __init__(self, *args, **kwargs):
         tls_params = kwargs.pop("tls", {})
-        
+
         if "cert" in tls_params and "key" in tls_params:
             kwargs["cert"] = (tls_params["cert"], tls_params["key"])
         elif "cert" in tls_params:
             kwargs["cert"] = tls_params["cert"]
-            
+
         kwargs["event_hooks"] = {
             "response": [self.log_for_status, self.raise_for_status]
         }
