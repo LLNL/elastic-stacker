@@ -241,7 +241,8 @@ class TransformController(ElasticsearchAPIController):
         #     for t in self._depaginate(self.stats, "transforms", page_size=100)
         # }
 
-        transform_files = set(working_directory.glob("*.json")).discard(stats_file)
+        transform_files = set(working_directory.glob("*.json"))
+        transform_files.discard(stats_file)
         for transform_file in transform_files:
             logger.debug("Loading {}".format(transform_file))
             transform_id = transform_file.stem
