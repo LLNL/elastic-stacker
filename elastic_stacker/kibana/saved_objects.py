@@ -281,9 +281,11 @@ class SavedObjectController(GenericController):
                     continue
                 attrs = obj["attributes"]
                 obj_name = attrs.get(
-                    "title", attrs.get("name", obj.get("id", "NO_NAME"))
+                    "title", attrs.get("name", "NO_NAME")
                 )
-                file_name = slugify(obj_name) + ".json"
+                name_slug = slugify(obj_name)
+                id_slug = slugify(obj.get("id", "NO_ID"))
+                file_name = name_slug + "-" + id_slug + ".json"
                 object_type_dir = working_directory / obj["type"]
                 if not object_type_dir.is_dir():
                     object_type_dir.mkdir(parents=True)
