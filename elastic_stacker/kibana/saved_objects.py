@@ -214,7 +214,7 @@ class SavedObjectController(GenericController):
                                 "ignoreMissingReferences": True,
                             }
                         )
-                for success in results["successResults"]:
+                for success in results.get("successResults", []):
                     retries.append(
                         {
                             "id": success["id"],
