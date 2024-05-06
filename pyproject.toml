@@ -16,6 +16,9 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[tool.setuptools.dynamic]
+version = {attr = "elastic_stacker.__version__"}
+
 [project.scripts]
 stacker = "elastic_stacker:main"
 
