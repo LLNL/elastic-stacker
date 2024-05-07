@@ -5,6 +5,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elastic_stacker"
+license = {file = "LICENSE"}
+readme="README.md"
+authors = [
+  {name = "James Taliaferro", email = "taliaferro1+pypi@llnl.gov"},
+]
+keywords = ["elasticsearch"]
 requires-python = ">=3.9"
 dependencies = [
     "httpx",
@@ -15,6 +21,7 @@ dependencies = [
     "ecs-logging",
 ]
 dynamic = ["version"]
+urls = { repository = "https://github.com/llnl/elastic-stacker" }
 
 [tool.setuptools.dynamic]
 version = {attr = "elastic_stacker.__version__"}
