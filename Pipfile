@@ -10,9 +10,15 @@ elastic-stacker = {editable = true, path = "."}
 black = "*"
 ipython = "*"
 flake8 = "*"
+build = "*"
+twine = "*"
+setuptools = "*"
+setuptools-scm = "*"
 
 [requires]
 python_version = "3.9"
 
 [scripts]
 format = "black ./elastic_stacker"
+build = "python3 -m build --wheel"
+publish = "twine upload dist/*"
