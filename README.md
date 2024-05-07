@@ -9,9 +9,8 @@ A main use case is for moving from development done in a PRE environment, and in
 ## Installation
 
 ```bash
-pip install git+https://github.com/LLNL/elastic-stacker.git@main
+pip install elastic-stacker
 ```
-> Publication to PyPI is on the roadmap for the future.
 
 ## Contributing
 
@@ -22,7 +21,7 @@ pip install git+https://github.com/LLNL/elastic-stacker.git@main
     ```sh
     cp stacker.example.yaml stacker.yaml
     # Update any configuration options needed:
-    vim stacker.yaml
+    nano stacker.yaml
     ```
 6. Run the tool (more detailed usage below): `stacker -p <pre|prod> system_dump`
 
