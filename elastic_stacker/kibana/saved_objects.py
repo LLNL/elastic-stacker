@@ -249,7 +249,7 @@ class SavedObjectController(GenericController):
                         if obj["id"] not in failed_ids:
                             object_file.unlink()
 
-    def dump(self, *types: str, data_directory: os.PathLike = None, **kwargs):
+    def dump(self, *types: str, data_directory: os.PathLike = None, no_dedup: bool=False, **kwargs):
         """
         Dumps saved objects from Kibana.
         In contrast to Kibana's native export functionality, this splits the
