@@ -1,8 +1,8 @@
-import fire
-from .stacker import Stacker
 
 __version__="0.1.2"
 
+import fire
+from .stacker import Stacker
 
 def main():
     fire.Fire(Stacker)
