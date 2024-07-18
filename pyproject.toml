@@ -19,6 +19,7 @@ dependencies = [
     "fire",
     "pyyaml",
     "ecs-logging",
+    "graphviz"
 ]
 dynamic = ["version"]
 urls = { repository = "https://github.com/llnl/elastic-stacker" }
