@@ -26,11 +26,13 @@ logger = logging.getLogger("elastic_stacker")
 
 from . import __version__
 
+
 class Stacker(object):
     """
     Stacker is a tool for moving Elasticsearch and Kibana configuration
     objects across multiple instances of these services.
     """
+
     version: str = __version__
     profile: dict
     package_policies: PackagePolicyController
@@ -51,6 +53,7 @@ class Stacker(object):
         config: os.PathLike = None,
         profile: str = None,
         elasticsearch: str = None,
+        data_directory: os.PathLike = None,
         kibana: str = None,
         ca: os.PathLike = None,
         timeout: float = None,
@@ -61,6 +64,7 @@ class Stacker(object):
 
         overrides = {
             # TODO: add CLI arguments here to override configuration values, for example
+            "options": {"data_directory": data_directory},
             "elasticsearch": {"base_url": elasticsearch},
             "kibana": {"base_url": kibana},
             "client": {"verify": ca, "timeout": timeout},

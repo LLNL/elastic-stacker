@@ -18,15 +18,23 @@ class GenericController:
 
     _client: httpx.Client
     _options: dict
-    _resource_directory: str = ""
+    _data_directory: str
+    _resource_directory: str = ""  # the name of the subdirectory
     _subs: dict
 
-    def __init__(self, client: httpx.Client, subs: dict = {}, **options):
+    def __init__(
+        self,
+        client: httpx.Client,
+        subs: dict = {},
+        data_base_dir: os.PathLike = None,
+        **options,
+    ):
         self._client = client
         self._options = options
         self._subs = subs
         for name, sub in self._subs.items():
             self._subs[name]["search"] = re.compile(sub["search"])
+        self._data_directory = self._get_data_dir(data_base_dir)
 
     def _run_substitutions(self, value):
         for name, sub in sorted(self._subs.items()):
@@ -55,9 +63,7 @@ class GenericController:
         # (see https://www.python-httpx.org/compatibility/#event-hooks)
         return {k: v for k, v in params.items() if v is not None}
 
-    def _get_working_dir(
-        self, data_directory: os.PathLike = None, create=False
-    ) -> Path:
+    def _get_data_dir(self, data_directory: os.PathLike = None, create=False) -> Path:
         if data_directory is None:
             data_directory = self._options.get("data_directory")
         else:
