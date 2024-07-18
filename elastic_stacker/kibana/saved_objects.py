@@ -249,7 +249,13 @@ class SavedObjectController(GenericController):
                         if obj["id"] not in failed_ids:
                             object_file.unlink()
 
-    def dump(self, *types: str, data_directory: os.PathLike = None, no_dedup: bool=False, **kwargs):
+    def dump(
+        self,
+        *types: str,
+        data_directory: os.PathLike = None,
+        no_dedup: bool = False,
+        **kwargs,
+    ):
         """
         Dumps saved objects from Kibana.
         In contrast to Kibana's native export functionality, this splits the
@@ -273,7 +279,7 @@ class SavedObjectController(GenericController):
             # deduplicate saved objects that have been renamed.
             for obj_file in working_directory.glob("*/*.json"):
                 obj = self._read_file(object_file)
-                obj_id = obj['id']
+                obj_id = obj["id"]
                 if obj_id in dedup_map:
                     # resolve the conflict
                     dup_file = dedup_map[objid]
@@ -298,9 +304,7 @@ class SavedObjectController(GenericController):
                     # TODO: log this and go on your merry way
                     continue
                 attrs = obj["attributes"]
-                obj_name = attrs.get(
-                    "title", attrs.get("name", "NO_NAME")
-                )
+                obj_name = attrs.get("title", attrs.get("name", "NO_NAME"))
                 name_slug = slugify(obj_name)
                 id_slug = slugify(obj.get("id", "NO_ID"))
                 file_name = name_slug + "-" + id_slug + ".json"
@@ -309,8 +313,6 @@ class SavedObjectController(GenericController):
                     object_type_dir.mkdir(parents=True)
                 output_file = object_type_dir / file_name
                 self._write_file(output_file, obj)
-                prior_file = dedup_map[obj['id']]
+                prior_file = dedup_map[obj["id"]]
                 if output_file != prior_file:
                     prior_file.unlink()
-
-
