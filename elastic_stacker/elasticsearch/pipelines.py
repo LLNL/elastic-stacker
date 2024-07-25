@@ -182,7 +182,6 @@ class PipelineController(ElasticsearchAPIController):
                     )
 
             previous_node_id = this_node_id
-
         yield pipeline_subgraph
 
     def visualize(self, pattern: str = "*"):
