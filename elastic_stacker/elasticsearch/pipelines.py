@@ -106,7 +106,7 @@ class PipelineController(ElasticsearchAPIController):
 
     @functools.cache
     def _get_stored(self, pipeline_name: str):
-        pipeline_file = (self._data_directory / pipeline_name).with_suffix(".json")
+        pipeline_file = self._data_directory / (pipeline_name + ".json")
         with pipeline_file.open("r") as file_handle:
             return json.load(file_handle)
 
@@ -114,6 +114,7 @@ class PipelineController(ElasticsearchAPIController):
         matching_files = self._data_directory.glob(f"{pattern}.json")
         return [f.stem for f in matching_files]
 
+    @functools.cache
     def _render_pipeline(self, pipeline_name: str):
 
         DISPLAY_KEYS = {"field", "if", "name"}  # only show these fields in the nodes
@@ -151,17 +152,28 @@ class PipelineController(ElasticsearchAPIController):
 
             pipeline_subgraph.node(this_node_id, label=node_label)
             if previous_node_id:
-                pipeline_subgraph.edge(previous_node_id, this_node_id, shape="rarrow")
+                pipeline_subgraph.edge(
+                    previous_node_id,
+                    this_node_id,
+                    shape="rarrow",
+                )
 
             if processor_type == "pipeline":
                 next_pipeline_name = processor_opts["name"]
-                next_pipeline = self._get_stored(next_pipeline_name)
 
+                try:
+                    next_pipeline = self._get_stored(next_pipeline_name)
+                except FileNotFoundError:
+                    logger.info(
+                        "found link to nonexistent pipeline %s", next_pipeline_name
+                    )
+                    continue
                 yield from self._render_pipeline(next_pipeline_name)
-
                 next_pipeline_start = node_id(next_pipeline_name, 0)
                 next_pipeline_length = len(next_pipeline["processors"])
-                next_pipeline_end = node_id(next_pipeline_name, next_pipeline_length - 1)
+                next_pipeline_end = node_id(
+                    next_pipeline_name, next_pipeline_length - 1
+                )
 
                 # draw an edge to the start of the next pipeline
                 pipeline_subgraph.edge(
@@ -187,6 +199,7 @@ class PipelineController(ElasticsearchAPIController):
     def visualize(self, pattern: str = "*"):
         graph = graphviz.Digraph(
             pattern,
+            strict=True,
             graph_attr={"fontname": "Courier"},
             edge_attr={"fontname": "Courier", "fontsize": "9"},
             node_attr={
