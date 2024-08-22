@@ -45,6 +45,20 @@ git add $(git rev-parse --show-toplevel)/files/
 git commit -m"Updated elastic repo with exported content"
 ```
 
+## [FEATURE PREVIEW] Using the visualization feature
+
+1. install Stacker from the feature branch (in a venv, ideally)
+```
+pip install git+https://github.com/LLNL/elastic-stacker.git@feature/graphviz
+```
+2. Make sure your stacker data directory is available on your machine.
+3. Make directories `package_policies` and `agent_policies` in that data directory (workaround, will be fixed later)
+4. Run the new subcommand, specifying the location of the Stacker data directory and the pattern of pipelines to match:
+```
+stacker pipelines --data-directory=<DATA_DIRECTORY> visualize 'metrics-whatever-pattern-*'
+```
+This will attempt to open the rendered visualization using the system PDF viewer, so it may not work if it's run on a machine without a graphical display. You can work around this by copying the resulting `.gv.pdf` file to another machine, or use a tool like [imgcat](https://github.com/danielgatis/imgcat) to view the file in your terminal.
+
 ## License
 
 Stacker is released under the Apache 2.0 license with LLVM exception. For more details see the LICENSE file.
