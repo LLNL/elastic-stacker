@@ -51,9 +51,10 @@ git commit -m"Updated elastic repo with exported content"
 ```
 pip install git+https://github.com/LLNL/elastic-stacker.git@feature/graphviz
 ```
-2. Make sure your stacker data directory is available on your machine.
-3. Make directories `package_policies` and `agent_policies` in that data directory (workaround, will be fixed later)
-4. Run the new subcommand, specifying the location of the Stacker data directory and the pattern of pipelines to match:
+2. Install Graphviz (you can get it from your distribution package manager, or from Homebrew or Spack)
+3. Make sure your stacker data directory is available on your machine.
+4. Make directories `package_policies` and `agent_policies` in that data directory (workaround, will be fixed later)
+5. Run the new subcommand, specifying the location of the Stacker data directory and the pattern of pipelines to match:
 ```
 stacker pipelines --data-directory=<DATA_DIRECTORY> visualize 'metrics-whatever-pattern-*'
 ```
