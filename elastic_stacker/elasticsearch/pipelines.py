@@ -200,6 +200,7 @@ class PipelineController(ElasticsearchAPIController):
         graph = graphviz.Digraph(
             pattern,
             strict=True,
+            format="png",
             graph_attr={"fontname": "Courier"},
             edge_attr={"fontname": "Courier", "fontsize": "9"},
             node_attr={
