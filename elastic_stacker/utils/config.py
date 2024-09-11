@@ -19,6 +19,8 @@ CONFIG_FILE_PRECEDENCE = [
     "~/.stacker.yml",
     "~/.config/stacker.yaml",
     "~/.config/stacker.yml",
+    "/etc/stacker.yaml",
+    "/etc/stacker.yml",
 ]
 
 GLOBAL_DEFAULT_PROFILE = {
