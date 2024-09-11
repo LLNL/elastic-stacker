@@ -30,7 +30,7 @@ GLOBAL_DEFAULT_PROFILE = {
     "options": {
         "data_directory": "./stacker_data",
     },
-    "log": {"level": "WARN", "ecs": False},
+    "log": {"level": "INFO", "ecs": False},
 }
 
 logger = logging.getLogger("elastic_stacker")
@@ -81,6 +81,7 @@ def load_config(path: os.PathLike = None):
     """
     Find, load and validate the config file.
     """
+    logger.info("Using config file %s (use --config to override)")
     if path is None:
         path = find_config()
     else:
