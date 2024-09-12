@@ -26,11 +26,13 @@ logger = logging.getLogger("elastic_stacker")
 
 from . import __version__
 
+
 class Stacker(object):
     """
     Stacker is a tool for moving Elasticsearch and Kibana configuration
     objects across multiple instances of these services.
     """
+
     version: str = __version__
     profile: dict
     package_policies: PackagePolicyController
