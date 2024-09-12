@@ -271,19 +271,19 @@ class SavedObjectController(GenericController):
         if not no_dedup:
             # load the filenames and uuids of all existing saved objects so we can
             # deduplicate saved objects that have been renamed.
-            for obj_file in working_directory.glob("*/*.json"):
+            for object_file in working_directory.glob("*/*.json"):
                 obj = self._read_file(object_file)
                 obj_id = obj['id']
                 if obj_id in dedup_map:
                     # resolve the conflict
-                    dup_file = dedup_map[objid]
+                    dup_file = dedup_map[obj_id]
                     dup_obj = self._read_file(dup_file)
                     if obj["updated_at"] > dup_obj["updated_at"]:
                         dup_file.unlink()
                     else:
-                        obj_file.unlink()
-                        obj_file = dup_file
-                dedup_map[obj_id] = obj_file
+                        object_file.unlink()
+                        object_file = dup_file
+                dedup_map[obj_id] = object_file
 
         with self._export_stream(
             types=types, exclude_export_details=False, stream=True
@@ -309,8 +309,8 @@ class SavedObjectController(GenericController):
                     object_type_dir.mkdir(parents=True)
                 output_file = object_type_dir / file_name
                 self._write_file(output_file, obj)
-                prior_file = dedup_map[obj['id']]
-                if output_file != prior_file:
+                prior_file = dedup_map.get(obj['id'])
+                if prior_file and output_file != prior_file:
                     prior_file.unlink()
 
 
