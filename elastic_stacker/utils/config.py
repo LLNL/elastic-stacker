@@ -62,7 +62,6 @@ def read_config(path: Path = None):
     """
     Load the config file as YAML.
     """
-    logger.info("Reading configuration from file {}".format(path))
     with path.open("r") as fh:
         raw_config = yaml.safe_load(fh)
     return raw_config

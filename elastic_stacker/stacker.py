@@ -18,7 +18,7 @@ from .kibana.saved_objects import SavedObjectController
 from .kibana.agent_policies import AgentPolicyController
 from .kibana.package_policies import PackagePolicyController
 
-from .utils.config import load_config, make_profile
+from .utils.config import load_config, find_config, make_profile
 from .utils.client import APIClient
 from .utils.logging import configure_logger
 
@@ -72,6 +72,7 @@ class Stacker(object):
         )
 
         configure_logger(**self.profile["log"])
+        logger.info("Configuration was read from %s", config or find_config())
 
         # https://www.elastic.co/guide/en/kibana/master/api.html#api-request-headers
         self.profile["kibana"]["headers"] = self.profile["kibana"].get(
