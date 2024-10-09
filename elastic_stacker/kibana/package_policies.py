@@ -85,7 +85,7 @@ class PackagePolicyController(FleetAPIController):
         self,
         data_directory: os.PathLike = None,
         purge: bool=False,
-        purge_prompt: bool=True,
+        force_purge:bool=False,
         **kwargs
     ):
         working_directory = self._get_working_dir(data_directory, create=True)
@@ -98,6 +98,6 @@ class PackagePolicyController(FleetAPIController):
             if "title" in policy.get("package", {}):
                 policy["package"].pop("title")
             self._write_file(file_path, policy)
-        if purge:
-            self._purge_untouched_files(prompt=purge_prompt)
+        if purge or force_purge:
+            self._purge_untouched_files(force=force_purge)
 

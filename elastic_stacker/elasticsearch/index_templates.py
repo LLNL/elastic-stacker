@@ -74,7 +74,7 @@ class IndexTemplateController(ElasticsearchAPIController):
         include_managed: bool = False,
         data_directory: os.PathLike = None,
         purge: bool=False,
-        purge_prompt: bool=True,
+        force_purge:bool=False,
         **kwargs,
     ):
         """
@@ -94,8 +94,8 @@ class IndexTemplateController(ElasticsearchAPIController):
             if include_managed or not template_managed:
                 file_path = working_directory / (template["name"] + ".json")
                 self._write_file(file_path, template)
-        if purge:
-            self._purge_untouched_files(prompt=purge_prompt)
+        if purge or force_purge:
+            self._purge_untouched_files(force=force_purge)
 
     def load(
         self,

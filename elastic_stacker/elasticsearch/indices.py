@@ -330,7 +330,7 @@ class IndexController(ElasticsearchAPIController):
         include_managed: bool = False,
         data_directory: os.PathLike = None,
         purge: bool=False,
-        purge_prompt: bool=True,
+        force_purge:bool=False,
         **kwargs,
     ):
         """
@@ -341,7 +341,6 @@ class IndexController(ElasticsearchAPIController):
         indices = self.get("_all")
 
         for name, index in indices.items():
-            print(name)
             if name.startswith(".") and not include_managed:
                 continue
             for key in ["creation_date", "uuid", "provided_name", "version"]:
@@ -349,8 +348,8 @@ class IndexController(ElasticsearchAPIController):
                     index["settings"]["index"].pop(key)
             index_file = working_directory / (name + ".json")
             self._write_file(index_file, index)
-        if purge:
-            self._purge_untouched_files(prompt=purge_prompt)
+        if purge or force_purge:
+            self._purge_untouched_files(force=force_purge)
 
     def load(
         self,

@@ -254,7 +254,7 @@ class SavedObjectController(GenericController):
         *types: str,
         data_directory: os.PathLike = None,
         purge: bool=False,
-        purge_prompt: bool=True,
+        force_purge:bool=False,
         **kwargs,
     ):
         """
@@ -296,6 +296,6 @@ class SavedObjectController(GenericController):
                     object_type_dir.mkdir(parents=True)
                 output_file = object_type_dir / file_name
                 self._write_file(output_file, obj)
-        if purge:
-            self._purge_untouched_files(prompt=purge_prompt)
+        if purge or force_purge:
+            self._purge_untouched_files(force=force_purge)
 

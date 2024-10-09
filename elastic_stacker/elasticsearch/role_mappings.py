@@ -47,7 +47,7 @@ class RoleMappingController(ElasticsearchAPIController):
         self,
         data_directory: os.PathLike = None,
         purge: bool=False,
-        purge_prompt: bool=True,
+        force_purge:bool=False,
         **kwargs,
     ):
         """
@@ -58,8 +58,8 @@ class RoleMappingController(ElasticsearchAPIController):
         for name, role_mapping in role_mappings.items():
             file_path = working_directory / (name + ".json")
             self._write_file(file_path, role_mapping)
-        if purge:
-            self._purge_untouched_files(prompt=purge_prompt)
+        if purge or force_purge:
+            self._purge_untouched_files(force=force_purge)
 
 
 

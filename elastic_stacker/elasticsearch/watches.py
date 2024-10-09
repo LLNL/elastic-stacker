@@ -132,7 +132,7 @@ class WatchController(ElasticsearchAPIController):
         self,
         data_directory: os.PathLike = None,
         purge: bool=False,
-        purge_prompt: bool=True,
+        force_purge:bool=False,
         **kwargs
     ):
         """
@@ -142,5 +142,5 @@ class WatchController(ElasticsearchAPIController):
         for watch in self._depaginate(self.query, "watches", page_size=10):
             file_path = working_directory / (watch["_id"] + ".json")
             self._write_file(file_path, watch["watch"])
-        if purge:
-            self._purge_untouched_files(prompt=purge_prompt)
+        if purge or force_purge:
+            self._purge_untouched_files(force=force_purge)
