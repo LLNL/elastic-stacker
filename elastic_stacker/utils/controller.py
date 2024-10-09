@@ -8,11 +8,20 @@ from pathlib import Path
 def _abs_path(p: os.PathLike):
     return Path(p).expanduser().resolve()
 
+def _walk_files_in_path(p: Path, include_dirs: bool=False):
+    walk_root = str(_abs_path(p))
+    for root, dirs, files in os.walk(walk_root):
+        for filename in files:
+            yield Path(root) / filename
+
+
 PURGE_PROMPT = """
 {count} files in the data directory do not match with a resource on the server.
 Unless this operation was filtered to only some of the resources, that means
 those resources were probably deleted since the last system dump.
-{dump_list}
+
+Files to be purged:
+{purge_list}
 
 Delete these {count} resource dump files? [y/N]:"""
 
@@ -92,19 +101,26 @@ class GenericController:
         self.working_directory = _abs_path(working_directory)
         return working_directory
 
-    def _untouched_files(self):
-       existing_files = {_abs_path(p) for p in self.working_directory.glob("**/*") if p.is_file()}
-       return existing_files - self._touched_files
+    def _untouched_files(self, relative=False):
+        untouched = set()
+        for p in _walk_files_in_path(self.working_directory):
+            abs_p = _abs_path(p)
+            rel_p = p.relative_to(self.working_directory.parents[0])
+            if _abs_path(p) not in self._touched_files:
+                if relative:
+                    untouched.add(rel_p)
+                else:
+                    untouched.add(abs_p)
+        return untouched
 
-    def _purge_untouched_files(self, prompt: bool=False, list_purged: bool=False):
+    def _purge_untouched_files(self, force: bool=False):
        untouched = self._untouched_files()
+       relative_untouched = map(str, self._untouched_files(relative=True))
        if not untouched:
-           print("No resources needed to be purged.")
            return
-       relative_untouched = [str(p.relative_to(self.working_directory.parents[0])) for p in untouched]
-       dump_list = "\nThese files would be deleted:\n" + "\n".join(relative_untouched)
-       prompt = PURGE_PROMPT.format(count=len(untouched), dump_list = dump_list)
-       confirmed = not prompt or input(prompt) in {"Y", "y", "yes", "Yes", "YES"}
+       purge_list = "\n".join(relative_untouched)
+       prompt = PURGE_PROMPT.format(count=len(untouched), purge_list = purge_list)
+       confirmed = force or input(prompt) in {"Y", "y", "yes", "Yes", "YES"}
        if confirmed:
            for f in untouched:
                f.unlink()
