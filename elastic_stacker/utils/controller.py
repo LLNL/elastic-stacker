@@ -5,10 +5,12 @@ import re
 import httpx
 from pathlib import Path
 
+
 def _abs_path(p: os.PathLike):
     return Path(p).expanduser().resolve()
 
-def _walk_files_in_path(p: Path, include_dirs: bool=False):
+
+def _walk_files_in_path(p: Path, include_dirs: bool = False):
     walk_root = str(_abs_path(p))
     for root, dirs, files in os.walk(walk_root):
         for filename in files:
@@ -24,6 +26,7 @@ Files to be purged:
 {purge_list}
 
 Delete these {count} resource dump files? [y/N]:"""
+
 
 class GenericController:
     """
@@ -113,19 +116,19 @@ class GenericController:
                     untouched.add(abs_p)
         return untouched
 
-    def _purge_untouched_files(self, force: bool=False):
-       untouched = self._untouched_files()
-       relative_untouched = map(str, self._untouched_files(relative=True))
-       if not untouched:
-           return
-       purge_list = "\n".join(relative_untouched)
-       prompt = PURGE_PROMPT.format(count=len(untouched), purge_list = purge_list)
-       confirmed = force or input(prompt) in {"Y", "y", "yes", "Yes", "YES"}
-       if confirmed:
-           for f in untouched:
-               f.unlink()
-       else:
-           print("Cancelling purge of deleted files.")
+    def _purge_untouched_files(self, force: bool = False):
+        untouched = self._untouched_files()
+        relative_untouched = map(str, self._untouched_files(relative=True))
+        if not untouched:
+            return
+        purge_list = "\n".join(relative_untouched)
+        prompt = PURGE_PROMPT.format(count=len(untouched), purge_list=purge_list)
+        confirmed = force or input(prompt) in {"Y", "y", "yes", "Yes", "YES"}
+        if confirmed:
+            for f in untouched:
+                f.unlink()
+        else:
+            print("Cancelling purge of deleted files.")
 
 
 class ElasticsearchAPIController(GenericController):

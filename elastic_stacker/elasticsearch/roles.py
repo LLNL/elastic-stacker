@@ -47,8 +47,8 @@ class RoleController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
-        purge: bool=False,
-        force_purge:bool=False,
+        purge: bool = False,
+        force_purge: bool = False,
         **kwargs,
     ):
         """
@@ -62,7 +62,6 @@ class RoleController(ElasticsearchAPIController):
                 self._write_file(file_path, role)
         if purge or force_purge:
             self._purge_untouched_files(force=force_purge)
-
 
     def load(
         self,

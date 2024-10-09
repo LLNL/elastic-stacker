@@ -131,9 +131,9 @@ class WatchController(ElasticsearchAPIController):
     def dump(
         self,
         data_directory: os.PathLike = None,
-        purge: bool=False,
-        force_purge:bool=False,
-        **kwargs
+        purge: bool = False,
+        force_purge: bool = False,
+        **kwargs,
     ):
         """
         Dump out Watches from Elasticsearch to files in the data directory.

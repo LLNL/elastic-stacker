@@ -48,8 +48,8 @@ class AgentPolicyController(FleetAPIController):
         data_directory: os.PathLike = None,
         allow_failure: bool = False,
         delete_after_import: bool = False,
-        purge: bool=False,
-        force_purge:bool=False,
+        purge: bool = False,
+        force_purge: bool = False,
         **kwargs,
     ):
         raise NotImplementedError
@@ -70,4 +70,3 @@ class AgentPolicyController(FleetAPIController):
                 self._write_file(file_path, policy)
         if purge or force_purge:
             self._purge_untouched_files(force=force_purge)
-

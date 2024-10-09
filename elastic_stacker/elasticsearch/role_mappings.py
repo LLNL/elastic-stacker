@@ -46,8 +46,8 @@ class RoleMappingController(ElasticsearchAPIController):
     def dump(
         self,
         data_directory: os.PathLike = None,
-        purge: bool=False,
-        force_purge:bool=False,
+        purge: bool = False,
+        force_purge: bool = False,
         **kwargs,
     ):
         """
@@ -60,8 +60,6 @@ class RoleMappingController(ElasticsearchAPIController):
             self._write_file(file_path, role_mapping)
         if purge or force_purge:
             self._purge_untouched_files(force=force_purge)
-
-
 
     def load(
         self,

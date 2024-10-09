@@ -63,11 +63,12 @@ class EnrichPolicyController(ElasticsearchAPIController):
         response = self._client.put(endpoint, params=query_params)
         return response.json()
 
-    def dump(self,
+    def dump(
+        self,
         data_directory: os.PathLike = None,
-        purge: bool=False,
-        force_purge:bool=False,
-        **kwargs
+        purge: bool = False,
+        force_purge: bool = False,
+        **kwargs,
     ):
         """
         Dump enrich policies out to files in the data directory.
@@ -81,7 +82,6 @@ class EnrichPolicyController(ElasticsearchAPIController):
             self._write_file(policy_file, policy)
         if purge or force_purge:
             self._purge_untouched_files(force=force_purge)
-
 
     def load(
         self,

@@ -253,8 +253,8 @@ class SavedObjectController(GenericController):
         self,
         *types: str,
         data_directory: os.PathLike = None,
-        purge: bool=False,
-        force_purge:bool=False,
+        purge: bool = False,
+        force_purge: bool = False,
         **kwargs,
     ):
         """
@@ -298,4 +298,3 @@ class SavedObjectController(GenericController):
                 self._write_file(output_file, obj)
         if purge or force_purge:
             self._purge_untouched_files(force=force_purge)
-
