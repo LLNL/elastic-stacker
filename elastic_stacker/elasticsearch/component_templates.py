@@ -75,7 +75,6 @@ class ComponentTemplateController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         purge: bool=False,
         purge_prompt: bool=True,
-        purge_list: bool=True,
         **kwargs,
     ):
         """
@@ -90,7 +89,7 @@ class ComponentTemplateController(ElasticsearchAPIController):
                 file_path = working_directory / (name + ".json")
                 self._write_file(file_path, template)
         if purge:
-            self._purge_untouched_files(prompt=purge_prompt, list_purged = purge_list)
+            self._purge_untouched_files(prompt=purge_prompt)
 
 
     def load(

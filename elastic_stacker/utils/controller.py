@@ -94,7 +94,7 @@ class GenericController:
         return working_directory
 
     def _untouched_files(self):
-       existing_files = {_abs_path(p) for p in self.working_directory.iterdir()}
+       existing_files = {_abs_path(p) for p in self.working_directory.glob("**/*") if p.is_file()}
        return existing_files - self._touched_files
 
     def _purge_untouched_files(self, prompt: bool=False, list_purged: bool=False):
@@ -102,11 +102,8 @@ class GenericController:
        if not untouched:
            print("No resources needed to be purged.")
            return
-       if list_purged:
-           relative_untouched = [str(p.relative_to(self.working_directory.parents[0])) for p in untouched]
-           dump_list = "\nThese files would be deleted:\n" + "\n".join(relative_untouched)
-       else:
-           dump_list = "Run with --list-purged to see a full list"
+       relative_untouched = [str(p.relative_to(self.working_directory.parents[0])) for p in untouched]
+       dump_list = "\nThese files would be deleted:\n" + "\n".join(relative_untouched)
        prompt = PURGE_PROMPT.format(count=len(untouched), dump_list = dump_list)
        confirmed = not prompt or input(prompt) in {"Y", "y", "yes", "Yes", "YES"}
        if confirmed:

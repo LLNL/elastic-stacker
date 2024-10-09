@@ -48,6 +48,8 @@ class AgentPolicyController(FleetAPIController):
         data_directory: os.PathLike = None,
         allow_failure: bool = False,
         delete_after_import: bool = False,
+        purge: bool=False,
+        purge_prompt: bool=True,
         **kwargs,
     ):
         raise NotImplementedError
@@ -66,3 +68,6 @@ class AgentPolicyController(FleetAPIController):
                 filename = slugify(policy["name"]) + ".json"
                 file_path = working_directory / filename
                 self._write_file(file_path, policy)
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt)
+

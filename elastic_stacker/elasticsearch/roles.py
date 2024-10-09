@@ -47,6 +47,8 @@ class RoleController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
+        purge: bool=False,
+        purge_prompt: bool=True,
         **kwargs,
     ):
         """
@@ -58,6 +60,9 @@ class RoleController(ElasticsearchAPIController):
             if include_managed or not role.get("metadata", {}).get("_reserved"):
                 file_path = working_directory / (name + ".json")
                 self._write_file(file_path, role)
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt)
+
 
     def load(
         self,

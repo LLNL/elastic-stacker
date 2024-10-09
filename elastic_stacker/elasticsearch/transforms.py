@@ -288,6 +288,8 @@ class TransformController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
+        purge: bool=False,
+        purge_prompt: bool=True,
         **kwargs,
     ):
         """
@@ -301,6 +303,9 @@ class TransformController(ElasticsearchAPIController):
                     transform.pop(key, None)
                 file_path = working_directory / (transform.pop("id") + ".json")
                 self._write_file(file_path, transform)
+
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt)
 
         # we also need to know whether each transform was started at the time it was dumped
         stats = {}

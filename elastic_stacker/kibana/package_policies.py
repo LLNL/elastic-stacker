@@ -81,15 +81,23 @@ class PackagePolicyController(FleetAPIController):
                 if delete_after_import:
                     policy_file.unlink()
 
-    def dump(self, data_directory: os.PathLike = None, **kwargs):
+    def dump(
+        self,
+        data_directory: os.PathLike = None,
+        purge: bool=False,
+        purge_prompt: bool=True,
+        **kwargs
+    ):
         working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self._depaginate(self.get):
             filename = slugify(policy["name"]) + ".json"
             file_path = working_directory / filename
-
             # clean unimportable keys
             for key in ["created_at", "created_by", "revision"]:
                 policy.pop(key)
             if "title" in policy.get("package", {}):
                 policy["package"].pop("title")
             self._write_file(file_path, policy)
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt)
+

@@ -128,7 +128,13 @@ class WatchController(ElasticsearchAPIController):
                 if delete_after_import:
                     watch_file.unlink()
 
-    def dump(self, data_directory: os.PathLike = None, **kwargs):
+    def dump(
+        self,
+        data_directory: os.PathLike = None,
+        purge: bool=False,
+        purge_prompt: bool=True,
+        **kwargs
+    ):
         """
         Dump out Watches from Elasticsearch to files in the data directory.
         """
@@ -136,3 +142,5 @@ class WatchController(ElasticsearchAPIController):
         for watch in self._depaginate(self.query, "watches", page_size=10):
             file_path = working_directory / (watch["_id"] + ".json")
             self._write_file(file_path, watch["watch"])
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt)

@@ -64,6 +64,8 @@ class PipelineController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
+        purge: bool=False,
+        purge_prompt: bool=True,
         **kwargs,
     ):
         """
@@ -76,6 +78,9 @@ class PipelineController(ElasticsearchAPIController):
             if include_managed or not pipeline.get("_meta", {}).get("managed"):
                 file_path = working_directory / (name + ".json")
                 self._write_file(file_path, pipeline)
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt)
+
 
     def load(
         self,
