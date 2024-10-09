@@ -73,6 +73,9 @@ class ComponentTemplateController(ElasticsearchAPIController):
         self,
         include_managed: bool = False,
         data_directory: os.PathLike = None,
+        purge: bool=False,
+        purge_prompt: bool=True,
+        purge_list: bool=True,
         **kwargs,
     ):
         """
@@ -86,6 +89,9 @@ class ComponentTemplateController(ElasticsearchAPIController):
             if include_managed or not managed:
                 file_path = working_directory / (name + ".json")
                 self._write_file(file_path, template)
+        if purge:
+            self._purge_untouched_files(prompt=purge_prompt, list_purged = purge_list)
+
 
     def load(
         self,

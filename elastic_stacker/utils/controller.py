@@ -5,6 +5,17 @@ import re
 import httpx
 from pathlib import Path
 
+def _abs_path(p: os.PathLike):
+    return Path(p).expanduser().resolve()
+
+PURGE_PROMPT = """
+{count} files in the data directory do not match with a resource on the server.
+Unless this operation was filtered to only some of the resources, that means
+those resources were probably deleted since the last system dump.
+{dump_list}
+
+Delete these {count} resource dump files? [y/N]:
+"""
 
 class GenericController:
     """
@@ -20,6 +31,7 @@ class GenericController:
     _options: dict
     _resource_directory: str = ""
     _subs: dict
+    _touched_files: set[Path]
 
     def __init__(self, client: httpx.Client, subs: dict = {}, **options):
         self._client = client
@@ -27,6 +39,8 @@ class GenericController:
         self._subs = subs
         for name, sub in self._subs.items():
             self._subs[name]["search"] = re.compile(sub["search"])
+
+        self._touched_files = set()
 
     def _run_substitutions(self, value):
         for name, sub in sorted(self._subs.items()):
@@ -36,10 +50,12 @@ class GenericController:
         return value
 
     def _write_file(self, path: os.PathLike, obj: dict):
+        path = _abs_path(path)
         output = json.dumps(obj, indent=4, sort_keys=True)
         output = self._run_substitutions(output)
         with open(path, "w") as fh:
             fh.write(output)
+        self._touched_files.add(path)
 
     def _read_file(self, path: os.PathLike):
         with open(path, "r") as fh:
@@ -58,6 +74,7 @@ class GenericController:
     def _get_working_dir(
         self, data_directory: os.PathLike = None, create=False
     ) -> Path:
+        # TODO: this work should be done in the constructor
         if data_directory is None:
             data_directory = self._options.get("data_directory")
         else:
@@ -73,7 +90,25 @@ class GenericController:
                 "The data_directory {} is not valid directory".format(working_directory)
             )
 
+        self.initial_files = set(p.iterdir())
+        self.working_directory = working_directory
         return working_directory
+
+    def _untouched_files(self):
+       existing_files = {_abs_path(p) for p in self.working_directory.iterdir()}
+       return existing_files - self._touched_files
+
+    def _purge_untouched_files(self, prompt: bool=False, list_purged: bool=False):
+       untouched = self._untouched_files()
+       if list_purged:
+           relative_untouched = [p.relative_to(self.data_directory) for p in untouched]
+           dump_list = "\nThese files would be deleted:" + "\n".join(relative_untouched)
+       else:
+           dump_list = "Run with --list-purged to see a full list"
+       prompt = PURGE_PROMPT.format(count=len(untouched), dump_list = dump_list)
+       if not prompt or input(message) in {"Y", "y", "yes", "Yes", "YES"}:
+           for f in untouched():
+               f.unlink()
 
 
 class ElasticsearchAPIController(GenericController):

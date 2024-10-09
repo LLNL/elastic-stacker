@@ -71,6 +71,7 @@ class PipelineController(ElasticsearchAPIController):
         """
         working_directory = self._get_working_dir(data_directory, create=True)
         pipelines = self.get()
+        files_dumped = set()
         for name, pipeline in pipelines.items():
             if include_managed or not pipeline.get("_meta", {}).get("managed"):
                 file_path = working_directory / (name + ".json")
