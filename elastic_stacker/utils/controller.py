@@ -14,8 +14,7 @@ Unless this operation was filtered to only some of the resources, that means
 those resources were probably deleted since the last system dump.
 {dump_list}
 
-Delete these {count} resource dump files? [y/N]:
-"""
+Delete these {count} resource dump files? [y/N]:"""
 
 class GenericController:
     """
