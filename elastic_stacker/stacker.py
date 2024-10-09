@@ -21,6 +21,7 @@ from .kibana.package_policies import PackagePolicyController
 from .utils.config import load_config, find_config, make_profile
 from .utils.client import APIClient
 from .utils.logging import configure_logger
+from .utils.controller import PURGE_PROMPT
 
 logger = logging.getLogger("elastic_stacker")
 
@@ -139,6 +140,8 @@ class Stacker(object):
         *types: str,
         include_managed: bool = False,
         include_experimental: bool = False,
+        purge:bool = False,
+        force_purge:bool = False,
         data_directory: os.PathLike = None,
     ):
         """
@@ -165,12 +168,26 @@ class Stacker(object):
         dump_arguments = {
             "include_managed": include_managed,
             "data_directory": data_directory,
+            "purge": False
         }
 
+        untouched_files = set()
         for type_name in types:
             logger.info("exporting {}".format(type_name))
             controller = valid_controllers[type_name]
             controller.dump(**dump_arguments)
+            untouched_files |= controller._untouched_files(relative=True)
+
+        if untouched_files and purge or force_purge:
+            purge_list = "\n".join(sorted(map(str, untouched_files)))
+            confirmation_message = PURGE_PROMPT.format(count=len(untouched_files), purge_list=purge_list)
+            confirmed = force_purge or input(confirmation_message).lower() in {"y", "yes"}
+            if confirmed:
+                for type_name in types:
+                    controller = valid_controllers[type_name]
+                    controller._purge_untouched_files(force=True)
+
+
 
     def system_load(
         self,
