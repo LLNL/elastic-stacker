@@ -90,8 +90,7 @@ class GenericController:
                 "The data_directory {} is not valid directory".format(working_directory)
             )
 
-        self.initial_files = set(p.iterdir())
-        self.working_directory = working_directory
+        self.working_directory = _abs_path(working_directory)
         return working_directory
 
     def _untouched_files(self):
@@ -100,15 +99,21 @@ class GenericController:
 
     def _purge_untouched_files(self, prompt: bool=False, list_purged: bool=False):
        untouched = self._untouched_files()
+       if not untouched:
+           print("No resources needed to be purged.")
+           return
        if list_purged:
-           relative_untouched = [p.relative_to(self.data_directory) for p in untouched]
-           dump_list = "\nThese files would be deleted:" + "\n".join(relative_untouched)
+           relative_untouched = [str(p.relative_to(self.working_directory.parents[0])) for p in untouched]
+           dump_list = "\nThese files would be deleted:\n" + "\n".join(relative_untouched)
        else:
            dump_list = "Run with --list-purged to see a full list"
        prompt = PURGE_PROMPT.format(count=len(untouched), dump_list = dump_list)
-       if not prompt or input(message) in {"Y", "y", "yes", "Yes", "YES"}:
-           for f in untouched():
+       confirmed = not prompt or input(prompt) in {"Y", "y", "yes", "Yes", "YES"}
+       if confirmed:
+           for f in untouched:
                f.unlink()
+       else:
+           print("Cancelling purge of deleted files.")
 
 
 class ElasticsearchAPIController(GenericController):
