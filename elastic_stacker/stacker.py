@@ -32,6 +32,7 @@ class Stacker(object):
     """
     Stacker is a tool for moving Elasticsearch and Kibana configuration
     objects across multiple instances of these services.
+    You can run this command with no arguments to see a list of subcommands.
     """
 
     version: str = __version__
