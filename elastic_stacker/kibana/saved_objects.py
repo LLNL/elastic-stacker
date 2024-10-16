@@ -10,9 +10,20 @@ import httpx
 from slugify import slugify
 
 from elastic_stacker.utils.controller import GenericController
+from elastic_stacker.utils.misc import without_keys
 
 logger = logging.getLogger("elastic_stacker")
 
+EXCLUDED_ATTRIBUTES = {
+  "attributes.executionStatus.lastExecutionDate",
+  "attributes.lastRun",
+  "attributes.monitoring",
+  "attributes.nextRun",
+  "sort",
+  "created_at",
+  "updated_at",
+  "version"
+}
 
 class SavedObjectController(GenericController):
     """
@@ -286,6 +297,7 @@ class SavedObjectController(GenericController):
                     # it's the export details
                     # TODO: log this and go on your merry way
                     continue
+                obj = without_keys(obj, EXCLUDED_ATTRIBUTES)
                 attrs = obj["attributes"]
                 obj_name = attrs.get("title", attrs.get("name", "NO_NAME"))
                 name_slug = slugify(obj_name)
