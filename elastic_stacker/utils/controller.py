@@ -6,6 +6,16 @@ import httpx
 from pathlib import Path
 from collections import defaultdict
 
+PURGE_PROMPT = """
+{count} files in the data directory do not match with a resource on the server.
+Unless this operation was filtered to only some of the resources, that means
+those resources were probably deleted since the last system dump.
+
+Files to be purged:
+{purge_list}
+
+Delete these {count} resource dump files? [y/N]:"""
+
 
 def without_keys(d: dict, keys: list[str]):
     """
@@ -14,10 +24,11 @@ def without_keys(d: dict, keys: list[str]):
     at the dots before passing them down to _without_keys where the real work
     happens.
     """
-    keys = { tuple(key.split(".")) for key in keys }
+    keys = {tuple(key.split(".")) for key in keys}
     return _without_keys(d, keys)
 
-def _without_keys(d: dict, keys: set[tuple[str]] ):
+
+def _without_keys(d: dict, keys: set[tuple[str]]):
     """
     Given a nested dict and a set of keys to delete, selectively walk down the
     structure, deleting keys as as they're found. Only walks the parts of the
@@ -43,7 +54,7 @@ def _without_keys(d: dict, keys: set[tuple[str]] ):
 
     for k in keys:
         if delete_map[k] is None:
-            del(d[k])
+            del d[k]
         elif delete_map[k] and isinstance(d[k], dict):
             d[k] = _without_keys(d[k], delete_map[k])
 
@@ -59,17 +70,6 @@ def _walk_files_in_path(p: Path, include_dirs: bool = False):
     for root, dirs, files in os.walk(walk_root):
         for filename in files:
             yield Path(root) / filename
-
-
-PURGE_PROMPT = """
-{count} files in the data directory do not match with a resource on the server.
-Unless this operation was filtered to only some of the resources, that means
-those resources were probably deleted since the last system dump.
-
-Files to be purged:
-{purge_list}
-
-Delete these {count} resource dump files? [y/N]:"""
 
 
 class GenericController:

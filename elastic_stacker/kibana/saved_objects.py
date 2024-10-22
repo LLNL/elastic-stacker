@@ -22,14 +22,14 @@ class SavedObjectController(GenericController):
 
     _resource_directory = "saved_objects"
     _excluded_attributes = {
-      "attributes.executionStatus.lastExecutionDate",
-      "attributes.lastRun",
-      "attributes.monitoring",
-      "attributes.nextRun",
-      "sort",
-      "created_at",
-      "updated_at",
-      "version"
+        "attributes.executionStatus.lastExecutionDate",
+        "attributes.lastRun",
+        "attributes.monitoring",
+        "attributes.nextRun",
+        "sort",
+        "created_at",
+        "updated_at",
+        "version",
     }
 
     def types(self):
