@@ -20,6 +20,9 @@ class IndexController(ElasticsearchAPIController):
     """
 
     _resource_directory = "indices"
+    _excluded_attributes = [
+      "mappings._meta._transform.creation_date_in_millis"
+    ]
 
     def get(
         self,
