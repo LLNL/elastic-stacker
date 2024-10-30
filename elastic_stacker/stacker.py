@@ -1,10 +1,9 @@
-from . import __version__
-
 # stdlib
 import logging
 import os
 import shutil
 import tempfile
+from importlib.metadata import version
 
 # local project
 from .elasticsearch.indices import IndexController
@@ -35,7 +34,7 @@ class Stacker(object):
     You can run this command with no arguments to see a list of subcommands.
     """
 
-    version: str = __version__
+    version: str = version("elastic-stacker")
     profile: dict
     package_policies: PackagePolicyController
     agent_policies: AgentPolicyController
