@@ -1,31 +1,29 @@
-[build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-
 [project]
-name = "elastic_stacker"
+name = "elastic-stacker"
+version = "0.3.1"
+description = "Import/export tool for the Elastic Stack."
 license = {file = "LICENSE"}
-readme="README.md"
+readme = "README.md"
 authors = [
   {name = "James Taliaferro", email = "taliaferro1+pypi@llnl.gov"},
 ]
 keywords = ["elasticsearch"]
+urls = { repository = "https://github.com/llnl/elastic-stacker" }
 requires-python = ">=3.9"
 dependencies = [
-    "httpx",
-    "marshmallow",
-    "python-slugify",
-    "fire",
-    "pyyaml",
-    "ecs-logging",
+    "ecs-logging>=2.2.0",
+    "fire>=0.7.0",
+    "httpx>=0.27.2",
+    "marshmallow>=3.23.0",
+    "python-slugify>=8.0.4",
+    "pyyaml>=6.0.2",
 ]
-dynamic = ["version"]
-urls = { repository = "https://github.com/llnl/elastic-stacker" }
 
-[tool.setuptools.dynamic]
-version = {attr = "elastic_stacker.__version__"}
-
-[project.scripts]
-stacker = "elastic_stacker:main"
+[tool.uv]
+package = true
+dev-dependencies = [
+    "ipython>=8.18.1",
+    "ruff>=0.7.1",
+    "uv>=0.4.28",
+]
 
