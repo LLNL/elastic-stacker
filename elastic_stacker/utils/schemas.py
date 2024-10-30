@@ -1,4 +1,3 @@
-from enum import Enum
 import os
 
 import logging
@@ -14,7 +13,7 @@ from marshmallow import (
 )
 
 LOGLEVELS = ["DEBUG", "INFO", "WARNING", "WARN", "ERROR", "CRITICAL"]
-LOGLEVELS = LOGLEVELS + [l.lower() for l in LOGLEVELS]
+LOGLEVELS = LOGLEVELS + [level.lower() for level in LOGLEVELS]
 
 logger = logging.getLogger("elastic_stacker")
 

@@ -1,3 +1,5 @@
+from . import __version__
+
 # stdlib
 import logging
 import os
@@ -24,8 +26,6 @@ from .utils.logging import configure_logger
 from .utils.controller import PURGE_PROMPT
 
 logger = logging.getLogger("elastic_stacker")
-
-from . import __version__
 
 
 class Stacker(object):

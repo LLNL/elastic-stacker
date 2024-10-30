@@ -46,7 +46,7 @@ def _without_keys(d: dict, keys: set[tuple[str]]):
         if len(k) == 1:
             # None means this key should be deleted at this level
             delete_map[k[0]] = None
-        elif delete_map[k[0]] != None:
+        elif delete_map[k[0]] is not None:
             # if k[0] is present at this level, delete k[1:] at the next level
             delete_map[k[0]].add(k[1:])
 

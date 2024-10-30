@@ -1,7 +1,5 @@
 import os
 import logging
-import json
-import shutil
 import typing
 import tempfile
 import json
@@ -53,9 +51,7 @@ class SavedObjectController(GenericController):
         stream: bool = False,
     ):
         # TODO: maybe throw a nice friendly exception instead of an AssertionError?
-        assert (
-            types or objects
-        ), """
+        assert types or objects, """
         You must specify either a list of types or objects to export in the request body.
         see https://www.elastic.co/guide/en/kibana/master/saved-objects-api-export.html for details.
         """
