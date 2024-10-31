@@ -232,17 +232,10 @@ class TransformController(ElasticsearchAPIController):
             transform["id"]: transform for transform in transforms_generator
         }
 
-        stats_file = working_directory / "_stats.json"
-
-        # TODO: Future work to synchronize transform states
-        # reference_stats = self._read_file(stats_file)
-        # current_stats = {
-        #     t["id"]: t
-        #     for t in self._depaginate(self.stats, "transforms", page_size=100)
-        # }
+        state_file = working_directory / "_state.json"
 
         transform_files = set(working_directory.glob("*.json"))
-        transform_files.discard(stats_file)
+        transform_files.discard(state_file)
         for transform_file in transform_files:
             logger.debug("Loading {}".format(transform_file))
             transform_id = transform_file.stem
@@ -308,8 +301,8 @@ class TransformController(ElasticsearchAPIController):
             self._purge_untouched_files(force=force_purge)
 
         # we also need to know whether each transform was started at the time it was dumped
-        stats = {}
+        states = {}
         for transform in self._depaginate(self.stats, key="transforms", page_size=100):
-            stats[transform["id"]] = transform
-        transform_stats_file = working_directory / "_stats.json"
-        self._write_file(transform_stats_file, stats)
+            states[transform["id"]] = transform["state"]
+        state_file = working_directory / "_state.json"
+        self._write_file(state_file, states)
