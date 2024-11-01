@@ -2,7 +2,6 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
@@ -12,14 +11,3 @@ repos:
       - id: ruff
         args: [ --fix ]
       - id: ruff-format
-
-  - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.18
-    hooks:
-    - id: mdformat
-      # Optionally add plugins
-      additional_dependencies:
-      - mdformat-gfm
-      - mdformat-black
-      - mdformat-ruff
-      - mdformat-config
