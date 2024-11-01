@@ -11,3 +11,10 @@ repos:
       - id: ruff
         args: [ --fix ]
       - id: ruff-format
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.18  # Use the ref you want to point at
+    hooks:
+    - id: mdformat
+      additional_dependencies:
+      - mdformat-gfm
