@@ -45,10 +45,6 @@ configuration data, or to move it between multiple stacks.
 
 ## Configuration
 
-> :information: This section will give an overview of how to configure Stacker.
-> For more details about the configuration options for Stacker and what they do,
-> see [config.md](./config.md).
-
 Stacker adjusts its behavior based on a configuration file, called
 `stacker.yaml` (the `a` in yaml is optional). It looks for this file in your
 current working directory, in your `$XDG_CONFIG_HOME` (this is `~/.config` on
@@ -103,7 +99,7 @@ containing the keys `search` and `replace`. For example:
 ```yaml
 substitutions:
   distro_hop:
-    search: Red\s?Hat( Enterprise Linux)?
+    search: 'Red\s?Hat( Enterprise Linux)?'
     replace: AlmaLinux
 ```
 
@@ -112,23 +108,26 @@ including 'RedHat", "Red Hat" and "Red Hat Enterprise Linux", and replace it
 with the string "AlmaLinux" in every file that Stacker writes out, and in every
 dumped file it reads in as well.
 
-This is an incredibly powerful feature, but there are some technical details to
-be aware of if you want to use it.
+This is a powerful feature, but there are some technical details to be aware of
+if you want to use it.
 
 1. These matching patterns are **regular expressions** (*regex*), a language
    for matching patterns in text. Many common punctuation characters have
    special meanings in regex, so you will need to prefix them with a backslash
    (`\`) or they may cause unexpected effects. For example, dots in domain
    names need to be escaped:
+
    **WRONG:** `my.domain.net`
+
    **RIGHT:** `my\.domain\.net`
+
    If you're unfamiliar with regular expressions, the [Mozilla regular expression
    cheatsheet](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions/Cheatsheet)
    describes the special characters in regex and how they affect the search.
 
 1. Stacker's config file is in the [YAML](https://yaml.org/spec/) file format,
    and YAML handles strings with backslashes in them differently depending on if
-   they're `'single-quoted'` or `"double-quoted`. In double-quoted strings, the
+   they're `'single-quoted'` or `"double-quoted"`. In double-quoted strings, the
    YAML parser will try to interpret the backslash as the part of an escape
    sequence (for example, it'll replace `\n` with a newline character.)
    To make sure the YAML parser doesn't mangle your regex, you **MUST** put your
