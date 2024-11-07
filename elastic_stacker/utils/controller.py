@@ -1,10 +1,10 @@
 import json
 import os
 import re
+from collections import defaultdict
+from pathlib import Path
 
 import httpx
-from pathlib import Path
-from collections import defaultdict
 
 PURGE_PROMPT = """
 {count} files in the data directory do not match with a resource on the server.
@@ -115,7 +115,7 @@ class GenericController:
         self._touched_files.add(path)
 
     def _read_file(self, path: os.PathLike):
-        with open(path, "r") as fh:
+        with open(path) as fh:
             value = fh.read()
         value = self._run_substitutions(value)
         return json.loads(value)
@@ -144,7 +144,7 @@ class GenericController:
 
         if not working_directory.is_dir():
             raise NotADirectoryError(
-                "The data_directory {} is not valid directory".format(working_directory)
+                f"The data_directory {working_directory} is not valid directory"
             )
 
         self.working_directory = _abs_path(working_directory)

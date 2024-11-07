@@ -26,21 +26,19 @@ def substitute_passwords(
             username = d.get("username", "")
             if prompt:
                 d[key] = getpass.getpass(
-                    "Password for {} in watch {}:".format(username, watch_id)
+                    f"Password for {username} in watch {watch_id}:"
                 )
             elif username in password_map:
                 d[key] = password_map[username]
             else:
                 logger.error(
-                    "No password found for user {user} in watch {watch_name}"
-                    "Set `options.watcher_users.{user}` in the config file, "
+                    f"No password found for user {username} in watch {watch_id}"
+                    f"Set `options.watcher_users.{username}` in the config file, "
                     "or use the `--prompt-credentials flag to enter them at "
-                    "the command line.`".format(user=username, watch_name=watch_id)
+                    "the command line.`"
                 )
                 raise KeyError(
-                    "No password for {user} in watch {watch_name}".format(
-                        user=username, watch_name=watch_id
-                    )
+                    f"No password for {username} in watch {watch_id}"
                 )
     return d
 
@@ -81,7 +79,7 @@ class WatchController(ElasticsearchAPIController):
         Create a new watch, or update an existing one.
         https://www.elastic.co/guide/en/elasticsearch/reference/current/watcher-api-put-watch.html
         """
-        endpoint = "_watcher/watch/{}".format(watch_id)
+        endpoint = f"_watcher/watch/{watch_id}"
         query_params = {"active": active}
         query_params = self._clean_params(query_params)
         response = self._client.put(endpoint, json=watch, params=query_params)
@@ -112,15 +110,15 @@ class WatchController(ElasticsearchAPIController):
                 watch_id=watch_id,
             )
 
-            logger.info("Loading watch {}".format(watch_id))
+            logger.info(f"Loading watch {watch_id}")
             # TODO store watch active state on dump
             try:
                 self.create(watch_id, watch)
             except HTTPStatusError as e:
                 if allow_failure:
                     logger.info(
-                        "Experienced an error importing watch {}; "
-                        "continuing because allow_failure is True".format(watch_id)
+                        f"Experienced an error importing watch {watch_id}; "
+                        "continuing because allow_failure is True"
                     )
                 else:
                     raise e

@@ -5,7 +5,7 @@ import ecs_logging
 logger = logging.getLogger("elastic_stacker")
 
 
-def configure_logger(level: int = logging.WARN, ecs: bool = False):
+def configure_logger(level: int = logging.WARNING, ecs: bool = False):
     if ecs:
         formatter = ecs_logging.StdlibFormatter()
     else:

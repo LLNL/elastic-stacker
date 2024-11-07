@@ -1,8 +1,8 @@
-import os
-import logging
-import typing
-import tempfile
 import json
+import logging
+import os
+import tempfile
+import typing
 
 import httpx
 from slugify import slugify
@@ -130,11 +130,9 @@ class SavedObjectController(GenericController):
             form_data = {}
 
         if space_id is not None:
-            endpoint = "/s/{space}/api/saved_objects/{action}".format(
-                space=space_id, action=action
-            )
+            endpoint = f"/s/{space_id}/api/saved_objects/{action}"
         else:
-            endpoint = "/api/saved_objects/{}".format(action)
+            endpoint = f"/api/saved_objects/{action}"
 
         # temporary files get unhelpful or blank names, and Kibana expects specific file extensions on the name
         # so we'll pretend whatever stream we're fed comes from an ndjson file.
@@ -182,7 +180,7 @@ class SavedObjectController(GenericController):
                 intermediate_file.write(b"\n")
                 object_count += 1
             # jump back to the start of the file buffer
-            logger.debug("Preparing to load {count} objects".format(count=object_count))
+            logger.debug(f"Preparing to load {object_count} objects")
             intermediate_file.seek(0)
             try:
                 results = self.import_objects(
@@ -274,9 +272,7 @@ class SavedObjectController(GenericController):
         types = set(types) if types else known_types
 
         invalid_types = types.difference(known_types)
-        assert not invalid_types, "Invalid types: {}. Valid types include: {}".format(
-            invalid_types, known_types
-        )
+        assert not invalid_types, f"Invalid types: {invalid_types}. Valid types include: {known_types}"
 
         working_directory = self._get_working_dir(data_directory, create=True)
 

@@ -1,8 +1,8 @@
+import logging
 import os
 import sys
-import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 
@@ -122,13 +122,13 @@ def make_profile(config: dict, overrides: dict = {}, profile_name: str = None):
     user_defaults = config.get("default", {})
 
     if not user_defaults:
-        logger.warn("No user-specified defaults found; using application defaults.")
+        logger.warning("No user-specified defaults found; using application defaults.")
 
     profiles = config.get("profiles", {})
     selected_profile = profiles.get(profile_name, {})
 
     if selected_profile == {} and profile_name is not None:
-        logger.error("Profile {} not found in config; exiting.".format(profile_name))
+        logger.error(f"Profile {profile_name} not found in config; exiting.")
         sys.exit(1)
 
     # this is the order of precedence for configuration:

@@ -28,15 +28,11 @@ class APIClient(httpx.Client):
                 elif isinstance(error, str):
                     reason = error
             else:
-                reason = "{} {}".format(response.status_code, response.reason_phrase)
+                reason = f"{response.status_code} {response.reason_phrase}"
             reason = " ".join(reason.splitlines())
 
             logger.error(
-                "Request to {method} {url} failed: {reason}".format(
-                    method=response.request.method,
-                    url=response.request.url,
-                    reason=reason,
-                )
+                f"Request to {response.request.method} {response.request.url} failed: {reason}"
             )
 
     def __init__(self, *args, **kwargs):
