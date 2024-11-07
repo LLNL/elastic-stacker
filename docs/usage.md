@@ -63,9 +63,10 @@ in the defaults section:
 The client section configures the base HTTP client used for communication
 with Elasticsearch and Kibana. You can set options like:
 
-- `client.base_url`: The URL for the Elasticsearch or Kibana APIs. This should
-  usually not be set in the `client` section, but instead overridden in the
-  `elasticsearch` and `kibana` sections that apply to just one or the other.
+- `client.base_url`: The URL for the Elasticsearch or Kibana APIs. The
+  `elasticsearch` and `kibana` sections inherit configuration from the `client`
+  section, so the base URL is usually set in one of those sections, not in the
+  generic `client` section.
 - `client.timeout`: The timeout for requests, in seconds
 - `client.verify`: the path to a file containing CA certificates which the
   client will trust.
