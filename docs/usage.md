@@ -309,7 +309,7 @@ Elastic Stacks (for example, a staging and a production environment.)
 To configure Stacker for this use case, you may want to start with
 [`stacker.example.yaml`](../stacker.example.yaml) which shows how this can work.
 
-In that configuration, there's one profile for `staging` (preproduction) and one
+In that configuration, there's one profile for `staging` (pre-production) and one
 for `production`. Both profiles share many of the same settings, but they have
 different URLs, different API tokens, and potentially different passwords for
 the Watcher automation user called `t1000`.
