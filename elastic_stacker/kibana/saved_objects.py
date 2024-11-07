@@ -50,11 +50,8 @@ class SavedObjectController(GenericController):
         exclude_export_details: bool = None,
         stream: bool = False,
     ):
-        # TODO: maybe throw a nice friendly exception instead of an AssertionError?
-        assert types or objects, """
-        You must specify either a list of types or objects to export in the request body.
-        see https://www.elastic.co/guide/en/kibana/master/saved-objects-api-export.html for details.
-        """
+        if not types or objects:
+            raise RuntimeError("You must specify either a list of types or objects to export in the request body.")
 
         if space_id is not None:
             endpoint = "/s/%s/api/saved_objects/_export" % space_id
