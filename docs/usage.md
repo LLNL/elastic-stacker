@@ -170,8 +170,8 @@ Currently supported keys are:
 
 - `log.level`: sets the global log level for the application; accepts values
   like "INFO" or "warning" (can be upper- or lowercase.)
-- `log.ecs`: formats the log messages in [Elastic Common
-  Schema](https://www.elastic.co/guide/en/ecs/current/index.html)
+- `log.ecs`: if this is truthy, Stacker will format the log messages in the
+  [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/index.html)
   format for easy processing in Elasticsearch.
 
 ### Profiles
