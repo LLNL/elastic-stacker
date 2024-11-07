@@ -11,21 +11,17 @@ Your first step will be to clone the repository:
 git clone https://github.com/LLNL/elastic-stacker.git
 ```
 
-Stacker uses [uv](https://docs.astral.sh/uv/) to manage dependencies, packaging,
-etc. You can install it by following their [installation
+Stacker uses [Hatch](https://hatch.pypa.io/latest/) to manage dependencies,
+packaging, etc. You can install it by following their [installation
 guide](https://docs.astral.sh/uv/getting-started/installation/), and then set up
 your environment by running:
 
 ```bash
-# install the dependencies and development tools
-uv sync
-
 # automatically lint and format code before commiting
-uv run pre-commit install
+hatch run pre-commit install
 
-# Make a Python virtual environment to work in:
-uv venv
-source .venv/bin/activate
+# Enter the project's virtual environment:
+hatch shell
 ```
 
 ### The example config file
@@ -43,13 +39,12 @@ won't get committed.)
 
 ### Code style
 
-Stacker uses [ruff](https://docs.astral.sh/ruff/) for formatting and linting.
-When you set up the environment earlier, hooks were installed into Git which
-will automatically format your code, check for style issues and attempt to fix
-them each time you commit. To run the same checks manually, run:
+Code style is enforced by `hatch fmt`, a wrapper around `ruff` with most of the
+extended checks turned on. You can run it like this:
 
 ```bash
-# these should be prepended with `uv run` if you don't have the venv active.
-ruff check --fix
-ruff format
+hatch fmt
 ```
+
+There's also a pre-commit hook that runs ruff's basic linting and formatting
+before each commit.

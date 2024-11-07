@@ -1,6 +1,5 @@
 [project]
 name = "elastic-stacker"
-version = "0.3.1"
 description = "Import/export tool for the Elastic Stack."
 license = {file = "LICENSE"}
 readme = "README.md"
@@ -18,14 +17,20 @@ dependencies = [
     "python-slugify>=8.0.4",
     "pyyaml>=6.0.2",
 ]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License"
+]
+dynamic = ["version"]
 
 [project.scripts]
 stacker = "elastic_stacker:main"
 
+[tool.hatch.version]
+path = "elastic_stacker/__about__.py"
 
-[tool.uv]
-package = true
-dev-dependencies = [
+[tool.hatch.envs.default]
+installer = "uv"
+dependencies = [
     "ipython>=8.18.1",
     "mdformat-config>=0.2.1",
     "mdformat-gfm>=0.3.7",
@@ -35,3 +40,7 @@ dev-dependencies = [
     "ruff>=0.7.1",
     "uv>=0.4.28",
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
