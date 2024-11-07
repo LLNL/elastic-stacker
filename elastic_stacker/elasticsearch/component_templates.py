@@ -21,7 +21,7 @@ class ComponentTemplateController(ElasticsearchAPIController):
         endpoint = (
             self._base_endpoint
             if name is None
-            else "{}/{}".format(self._base_endpoint, name)
+            else f"{self._base_endpoint}/{name}"
         )
         return endpoint
 

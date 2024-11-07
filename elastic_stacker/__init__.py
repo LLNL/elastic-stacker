@@ -1,7 +1,10 @@
-__version__ = "0.3.0"
+from importlib.metadata import version
 
 import fire
+
 from .stacker import Stacker
+
+__version__ = version("elastic-stacker")
 
 
 def main():

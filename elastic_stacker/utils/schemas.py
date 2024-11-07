@@ -1,20 +1,18 @@
-from enum import Enum
-import os
-
 import logging
+import os
 from pathlib import Path
 
 from marshmallow import (
     Schema,
-    fields,
-    validate,
-    pre_load,
-    post_load,
     ValidationError,
+    fields,
+    post_load,
+    pre_load,
+    validate,
 )
 
 LOGLEVELS = ["DEBUG", "INFO", "WARNING", "WARN", "ERROR", "CRITICAL"]
-LOGLEVELS = LOGLEVELS + [l.lower() for l in LOGLEVELS]
+LOGLEVELS = LOGLEVELS + [level.lower() for level in LOGLEVELS]
 
 logger = logging.getLogger("elastic_stacker")
 

@@ -3,39 +3,38 @@ import logging
 import os
 import shutil
 import tempfile
+from importlib.metadata import version
+
+from .elasticsearch.component_templates import ComponentTemplateController
+from .elasticsearch.enrich_policies import EnrichPolicyController
+from .elasticsearch.index_templates import IndexTemplateController
 
 # local project
 from .elasticsearch.indices import IndexController
-from .elasticsearch.index_templates import IndexTemplateController
-from .elasticsearch.component_templates import ComponentTemplateController
 from .elasticsearch.pipelines import PipelineController
+from .elasticsearch.role_mappings import RoleMappingController
+from .elasticsearch.roles import RoleController
 from .elasticsearch.transforms import TransformController
 from .elasticsearch.watches import WatchController
-from .elasticsearch.enrich_policies import EnrichPolicyController
-from .elasticsearch.roles import RoleController
-from .elasticsearch.role_mappings import RoleMappingController
-from .kibana.saved_objects import SavedObjectController
 from .kibana.agent_policies import AgentPolicyController
 from .kibana.package_policies import PackagePolicyController
-
-from .utils.config import load_config, find_config, make_profile
+from .kibana.saved_objects import SavedObjectController
 from .utils.client import APIClient
-from .utils.logging import configure_logger
+from .utils.config import find_config, load_config, make_profile
 from .utils.controller import PURGE_PROMPT
+from .utils.logging import configure_logger
 
 logger = logging.getLogger("elastic_stacker")
 
-from . import __version__
 
-
-class Stacker(object):
+class Stacker:
     """
     Stacker is a tool for moving Elasticsearch and Kibana configuration
     objects across multiple instances of these services.
     You can run this command with no arguments to see a list of subcommands.
     """
 
-    version: str = __version__
+    version: str = version("elastic-stacker")
     profile: dict
     package_policies: PackagePolicyController
     agent_policies: AgentPolicyController
@@ -162,7 +161,7 @@ class Stacker(object):
 
         invalid_types = set(types) - set(valid_controllers.keys())
         if invalid_types:
-            raise Exception("types {} are invalid".format(invalid_types))
+            raise Exception(f"types {invalid_types} are invalid")
         if len(types) == 0:
             types = valid_controllers.keys()
 
@@ -174,7 +173,7 @@ class Stacker(object):
 
         untouched_files = set()
         for type_name in types:
-            logger.info("exporting {}".format(type_name))
+            logger.info(f"exporting {type_name}")
             controller = valid_controllers[type_name]
             controller.dump(**dump_arguments)
             untouched_files |= controller._untouched_files(relative=True)
@@ -228,7 +227,7 @@ class Stacker(object):
 
         invalid_types = set(types) - set(self._controllers.keys())
         if invalid_types:
-            raise Exception("types {} are invalid".format(invalid_types))
+            raise Exception(f"types {invalid_types} are invalid")
         if len(types) == 0:
             types = self._controllers.keys()
 
@@ -249,6 +248,6 @@ class Stacker(object):
         for _ in range(retries + 1):
             logger.info("beginning attempt no.")
             for type_name in types:
-                logger.warning("importing {}".format(type_name))
+                logger.warning(f"importing {type_name}")
                 controller = self._controllers[type_name]
                 controller.load(**load_arguments)

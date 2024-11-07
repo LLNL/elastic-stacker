@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 import os
 
 from httpx import HTTPStatusError
@@ -21,7 +21,7 @@ class TransformController(ElasticsearchAPIController):
 
     def _build_endpoint(self, *ids: str) -> str:
         id_string = ",".join(ids)
-        return "{}/{}".format(self._base_endpoint, id_string)
+        return f"{self._base_endpoint}/{id_string}"
 
     def get(
         self,
@@ -101,9 +101,7 @@ class TransformController(ElasticsearchAPIController):
         allowed_states = started_states | stopped_states
 
         if target_state not in allowed_states:
-            err_msg = "{} is not a valid state for transforms; acceptable values are {}.".format(
-                target_state, allowed_states
-            )
+            err_msg = f"{target_state} is not a valid state for transforms; acceptable values are {allowed_states}."
             logger.error(err_msg)
             raise ValueError(err_msg)
 
@@ -112,14 +110,13 @@ class TransformController(ElasticsearchAPIController):
 
         if target_state in started_states:
             if current_state in started_states:
-                logger.debug("transform {} is already started".format(id))
+                logger.debug(f"transform {id} is already started")
             else:
                 self.start(id, timeout=timeout)
-        else:  # target_state in stopped_states
-            if current_state in stopped_states:
-                logger.debug("transform {} is already stopped".format(id))
-            else:
-                self.stop(id, timeout=timeout)
+        elif current_state in stopped_states:
+            logger.debug(f"transform {id} is already stopped")
+        else:
+            self.stop(id, timeout=timeout)
 
     def start(
         self,
@@ -135,7 +132,7 @@ class TransformController(ElasticsearchAPIController):
         query_params = {"from": from_time, "timeout": timeout}
         query_params = self._clean_params(query_params)
 
-        logger.debug("starting transform {}".format(id))
+        logger.debug(f"starting transform {id}")
         response = self._client.post(endpoint, params=query_params)
 
         return response.json()
@@ -164,7 +161,7 @@ class TransformController(ElasticsearchAPIController):
         }
         query_params = self._clean_params(query_params)
 
-        logger.debug("starting transform {}".format(id))
+        logger.debug(f"starting transform {id}")
         response = self._client.post(endpoint, params=query_params)
         return response.json()
 
@@ -232,33 +229,24 @@ class TransformController(ElasticsearchAPIController):
             transform["id"]: transform for transform in transforms_generator
         }
 
-        stats_file = working_directory / "_stats.json"
-
-        # TODO: Future work to synchronize transform states
-        # reference_stats = self._read_file(stats_file)
-        # current_stats = {
-        #     t["id"]: t
-        #     for t in self._depaginate(self.stats, "transforms", page_size=100)
-        # }
+        state_file = working_directory / "_state.json"
 
         transform_files = set(working_directory.glob("*.json"))
-        transform_files.discard(stats_file)
+        transform_files.discard(state_file)
         for transform_file in transform_files:
-            logger.debug("Loading {}".format(transform_file))
+            logger.debug(f"Loading {transform_file}")
             transform_id = transform_file.stem
             with transform_file.open("r") as fh:
                 loaded_transform = json.load(fh)
             try:
                 if transform_id in transforms_map:
-                    logger.info("Transform {} already exists.".format(transform_id))
+                    logger.info(f"Transform {transform_id} already exists.")
                     # the transform already exists; if it's changed we need to delete and recreate it
                     existing_transform = transforms_map[transform_id]
                     for key, loaded_value in loaded_transform.items():
                         if loaded_value != existing_transform[key]:
                             logger.info(
-                                "Transform {} differs by key {}, deleting and recreating.".format(
-                                    transform_id, key
-                                )
+                                f"Transform {transform_id} differs by key {key}, deleting and recreating."
                             )
                             self.stop(transform_id, wait_for_completion=True)
                             self.delete(transform_id)
@@ -270,7 +258,7 @@ class TransformController(ElasticsearchAPIController):
                             break
                 else:
                     logger.info(
-                        "Creating new transform with id {}".format(transform_id)
+                        f"Creating new transform with id {transform_id}"
                     )
                     self.create(transform_id, loaded_transform, defer_validation=True)
             except HTTPStatusError as e:
@@ -308,8 +296,8 @@ class TransformController(ElasticsearchAPIController):
             self._purge_untouched_files(force=force_purge)
 
         # we also need to know whether each transform was started at the time it was dumped
-        stats = {}
+        states = {}
         for transform in self._depaginate(self.stats, key="transforms", page_size=100):
-            stats[transform["id"]] = transform
-        transform_stats_file = working_directory / "_stats.json"
-        self._write_file(transform_stats_file, stats)
+            states[transform["id"]] = transform["state"]
+        state_file = working_directory / "_state.json"
+        self._write_file(state_file, states)

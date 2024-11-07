@@ -9,30 +9,49 @@ default:
     # remember to keep your regular expressions in single-quoted strings
     # or your backslashes will be interpreted as escape sequences.
     dump_kibana_urls:
-      search: '[\w-]*kibana[\w-]*\.llnl\.gov'
+      search: '[\w-]*kibana[\w-]*\.cyberdyne\.com'
       replace: "#{KIBANA_URL}"
     dump_elastic_urls:
-      search: '[\w-]*elastic[-\w]*.llnl.gov'
+      search: '[\w-]*elastic[-\w]*\.cyberdyne\.com'
       replace: "#{ELASTICSEARCH_URL}"
 
 # you can select the configuration profile you want to use
 # with the option `-p <client_name>`"
 profiles:
-  pre:
+  staging:
     kibana:
-      base_url: https://lc-kibana-pre.llnl.gov
+      base_url: https://kibana-staging.cyberdyne.com
     elasticsearch:
-      base_url: https://lc-elastic-hot-1-pre.llnl.gov:9200
+      base_url: https://elastic-staging-1.cyberdyne.com:9200
     client:
       headers:
         Authorization: "Apikey <REDACTED>"
     options:
       watcher_users:
-        geralt: <REDACTED>
+        t1000: <REDACTED>
     substitutions:
       load_kibana_url:
         search: '#{KIBANA_URL}'
-        replace: lc-kibana-pre.llnl.gov
+        replace: kibana-staging.cyberdyne.com
       load_elastic_url:
         search: '#{ELASTICSEARCH_URL}'
-        replace: lc-elastic-hot-1-pre.llnl.gov
+        replace: elastic-staging-1.cyberdyne.com
+
+  production:
+    kibana:
+      base_url: https://kibana.cyberdyne.com
+    elasticsearch:
+      base_url: https://elastic-1.cyberdyne.com:9200
+    client:
+      headers:
+        Authorization: "Apikey <REDACTED>"
+    options:
+      watcher_users:
+        t1000: <REDACTED>
+    substitutions:
+      load_kibana_url:
+        search: '#{KIBANA_URL}'
+        replace: kibana.cyberdyne.com
+      load_elastic_url:
+        search: '#{ELASTICSEARCH_URL}'
+        replace: elastic-1.cyberdyne.com

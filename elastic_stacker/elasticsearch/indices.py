@@ -76,7 +76,7 @@ class IndexController(ElasticsearchAPIController):
             "master_timeout": master_timeout,
         }
         query_params = self._clean_params(query_params)
-        endpoint = "/{}/_settings/{}".format(index_name, setting)
+        endpoint = f"/{index_name}/_settings/{setting}"
         response = self._client.get(endpoint, params=query_params)
         return response.json()
 
@@ -311,7 +311,7 @@ class IndexController(ElasticsearchAPIController):
         )
         if close_index_to_modify_settings:
             logger.warning(
-                "Briefly closing the index {} to modify its settings".format(index_name)
+                f"Briefly closing the index {index_name} to modify its settings"
             )
             self.close(index_name, master_timeout=master_timeout, timeout=timeout)
             self.update_settings(
@@ -372,14 +372,14 @@ class IndexController(ElasticsearchAPIController):
             index = self._read_file(index_file)
             try:
                 if index_name in existing_indices:
-                    logger.warn("Updating index {}".format(index_name))
+                    logger.warning(f"Updating index {index_name}")
                     self.update_index(
                         index_name,
                         index,
                         close_index_to_modify_settings=close_indices_to_modify_settings,
                     )
                 else:
-                    logger.warn("Creating new index {}".format(index_name))
+                    logger.warning(f"Creating new index {index_name}")
                     self.create(index_name, index)
             except HTTPStatusError as e:
                 if allow_failure:

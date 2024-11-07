@@ -21,7 +21,7 @@ class PipelineController(ElasticsearchAPIController):
         endpoint = (
             self._base_endpoint
             if id is None
-            else "{}/{}".format(self._base_endpoint, id)
+            else f"{self._base_endpoint}/{id}"
         )
         return endpoint
 

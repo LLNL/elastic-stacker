@@ -47,7 +47,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
                 # and the process for replacing an old one with a new one is a massive pain in the neck
                 # so changing existing policies is not supported in version 1, but the user
                 # should be warned that the policy hasn't been changed.
-                logger.warn(response_data["error"]["reason"])
+                logger.warning(response_data["error"]["reason"])
             else:
                 raise e
         return response_data
@@ -57,7 +57,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
         Execute an enrich policy.
         https://www.elastic.co/guide/en/elasticsearch/reference/current/execute-enrich-policy-api.html
         """
-        endpoint = "/_enrich/policy/{}/_execute".format(policy_name)
+        endpoint = f"/_enrich/policy/{policy_name}/_execute"
         query_params = {"wait_for_completion": wait_for_completion}
         query_params = self._clean_params(query_params)
         response = self._client.put(endpoint, params=query_params)
@@ -106,7 +106,7 @@ class EnrichPolicyController(ElasticsearchAPIController):
                     or response["error"].get("type")
                     == "resporce_already_exists_exception"
                 ):
-                    logger.warning("Executing new enrich policy {}".format(policy_name))
+                    logger.warning(f"Executing new enrich policy {policy_name}")
                     # TODO: add a flag to not wait for completion on the execution
                     self.execute(policy_name)
             except HTTPStatusError as e:
