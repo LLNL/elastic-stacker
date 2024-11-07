@@ -79,7 +79,6 @@ with Elasticsearch and Kibana. You can set options like:
   client:
     headers:
       Authorization: Apikey <key>
-  ```
 
 #### `elasticsearch` and `kibana`
 
