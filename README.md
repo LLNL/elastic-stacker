@@ -66,6 +66,6 @@ You want to hack on Stacker? Awesome, your contributions are welcome. See
 ## License
 
 Stacker is released under the Apache 2.0 license with LLVM exception. For
-more details see the LICENSE file.
+more details see the [LICENSE](LICENSE) file.
 
 LLNL-CODE-850537
