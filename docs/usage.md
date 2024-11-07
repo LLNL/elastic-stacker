@@ -77,11 +77,11 @@ with Elasticsearch and Kibana. You can set options like:
   they should take. If you want to use API keys instead of a username and
   password to interact with your Elastic Stack, you should set it as a HTTP
   header like so:
+
   ```yaml
   client:
     headers:
       Authorization: Apikey <key>
-  ```
 
 #### `elasticsearch` and `kibana`
 
