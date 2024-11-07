@@ -63,10 +63,6 @@ in the defaults section:
 The client section configures the base HTTP client used for communication
 with Elasticsearch and Kibana. You can set options like:
 
-- `client.base_url`: The URL for the Elasticsearch or Kibana APIs. The
-  `elasticsearch` and `kibana` sections inherit configuration from the `client`
-  section, so the base URL is usually set in one of those sections, not in the
-  generic `client` section.
 - `client.timeout`: The timeout for requests, in seconds
 - `client.verify`: the path to a file containing CA certificates which the
   client will trust.
@@ -88,10 +84,12 @@ with Elasticsearch and Kibana. You can set options like:
 #### `elasticsearch` and `kibana`
 
 These sections also configure the HTTP client -- but the settings here only
-apply to either the Elasticsearch or Kibana client, respectively. This way, you
-only have to set common settings (like auth headers) once in the `client`
-section, but can set settings like `base_url` separately for Elasticsearch and
-Kibana.
+apply to either the Elasticsearch or Kibana client, respectively.
+Because these sections are specific to one API or the other, they also accept an
+additional parameter:
+
+- `(elasticsearch|kibana).base_url`: The URL for the Elasticsearch or Kibana
+  API, including the scheme, hostname, port and potentially also the subpath.
 
 #### `substitutions`
 
