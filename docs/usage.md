@@ -37,7 +37,7 @@ It cannot currently process:
 - ILM policies
 
 (There is no technical reason Stacker can't handle these; it just hasn't been
-done yet...if you want to contribute these features see contributing.md to get
+done yet...if you want to contribute these features see [the contributing docs](docs/contributing.md) to get
 started.)
 
 This document will walk you through how to use Stacker to back up and restore
