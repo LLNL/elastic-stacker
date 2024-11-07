@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+elastic-stacker = {editable = true, path = "."}
+
+[dev-packages]
+black = "*"
+ipython = "*"
+flake8 = "*"
+build = "*"
+twine = "*"
+setuptools = "*"
+setuptools-scm = "*"
+
+[requires]
+python_version = "3.9"
+
+[scripts]
+format = "black ./elastic_stacker"
+build = "python3 -m build --wheel"
+publish = "twine upload dist/*"
