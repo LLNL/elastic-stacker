@@ -48,12 +48,6 @@ stacker system-dump --data-directory=../elastic-data
 # (you can load this back in with the "system-load" subcommand)
 ```
 
-specify the URLs of the Elasticsearch or Kibana APIs:
-
-```bash
-stacker --elasticsearch <URL> --kibana <URL> <SUBCOMMAND>
-```
-
 For more detailed instructions, see [usage.md](docs/usage.md). Many
 more configuration options can be set in the config file -- see
 [usage.md](docs/usage.md#Configuration) for a full list.
