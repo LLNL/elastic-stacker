@@ -222,7 +222,7 @@ next section.
 
 There are a few other subcommands which behave differently:
 
-- `system-dump`and `system-load`: iterate over all types of resources Stacker knows
+- `system-dump` and `system-load`: iterate over all types of resources Stacker knows
   about, and dump or load all of them.
 - `profile`: show the current configuration profile, after all the various
   levels of configuration have been merged together.
