@@ -307,7 +307,7 @@ Stacker can be used to keep configuration in sync between several different
 Elastic Stacks (for example, a staging and a production environment.)
 
 To configure Stacker for this use case, you may want to start with
-[`stacker.example.yaml`](../stacker.example.yaml) which shows how this can work.
+[`stacker.example.yaml`](/stacker.example.yaml) which shows how this can work.
 
 In that configuration, there's one profile for `staging` (pre-production) and one
 for `production`. Both profiles share many of the same settings, but they have
