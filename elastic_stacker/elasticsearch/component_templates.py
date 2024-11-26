@@ -75,7 +75,6 @@ class ComponentTemplateController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         purge: bool = False,
         force_purge: bool = False,
-        **kwargs,
     ):
         """
         Dump all component templates on the system to files in the data directory
@@ -96,7 +95,6 @@ class ComponentTemplateController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         delete_after_import: bool = False,
         allow_failure: bool = False,
-        **kwargs,
     ):
         """
         Load component template configurations from files and load them into

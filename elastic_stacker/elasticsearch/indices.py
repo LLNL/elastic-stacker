@@ -332,7 +332,6 @@ class IndexController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         purge: bool = False,
         force_purge: bool = False,
-        **kwargs,
     ):
         """
         Dump all indices on the system out to files in the data directory.
@@ -357,7 +356,6 @@ class IndexController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         delete_after_import: bool = False,
         allow_failure: bool = False,
-        **kwargs,
     ):
         """
         Load all indices in from files in the data directory, and recreate

@@ -153,7 +153,6 @@ class SavedObjectController(GenericController):
         delete_after_import: bool = False,
         allow_failure: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs
     ):
         """
         Loads Saved Objects from files on disk and imports them into Kibana.
@@ -253,7 +252,6 @@ class SavedObjectController(GenericController):
         data_directory: os.PathLike = None,
         purge: bool = False,
         force_purge: bool = False,
-        **kwargs,
     ):
         """
         Dumps saved objects from Kibana.

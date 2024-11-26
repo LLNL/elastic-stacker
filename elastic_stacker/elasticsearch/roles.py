@@ -49,7 +49,6 @@ class RoleController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         purge: bool = False,
         force_purge: bool = False,
-        **kwargs,
     ):
         """
         Dump all roles on the system to files in the data directory
@@ -68,7 +67,6 @@ class RoleController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         delete_after_import: bool = False,
         allow_failure: bool = False,
-        **kwargs,
     ):
         """
         Read role configurations from files and load them into

@@ -85,7 +85,6 @@ class WatchController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         allow_failure: bool = True,
         delete_after_import: bool = False,
-        **kwargs,
     ):
         """
         Load in watches from files in the data directory and create them in Elasticsearch.
@@ -124,7 +123,6 @@ class WatchController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         purge: bool = False,
         force_purge: bool = False,
-        **kwargs,
     ):
         """
         Dump out Watches from Elasticsearch to files in the data directory.

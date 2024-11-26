@@ -60,7 +60,6 @@ class PackagePolicyController(FleetAPIController):
         delete_after_import: bool = False,
         allow_failure: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs,
     ):
         raise NotImplementedError
         working_directory = self._get_working_dir(data_directory, create=False)
@@ -86,7 +85,6 @@ class PackagePolicyController(FleetAPIController):
         data_directory: os.PathLike = None,
         purge: bool = False,
         force_purge: bool = False,
-        **kwargs,
     ):
         working_directory = self._get_working_dir(data_directory, create=True)
         for policy in self._depaginate(self.get):

@@ -3,6 +3,7 @@ import os
 import re
 from collections import defaultdict
 from pathlib import Path
+from typing import Iterable
 
 import httpx
 
@@ -175,6 +176,18 @@ class GenericController:
                 f.unlink()
         else:
             print("Cancelling purge of deleted files.")
+
+    def _import(self, resources: Iterable[dict]):
+        raise NotImplementedError
+
+    def _export(self) => Iterable[tuple[str, dict]]:
+        raise NotImplementedError
+
+    def load(self, delete_after_import: bool=False, allow_failure: bool=False):
+        pass
+
+    def dump(self, include_managed: bool=False, purge: bool=False, force_purge: bool=False):
+        pass
 
 
 class ElasticsearchAPIController(GenericController):
