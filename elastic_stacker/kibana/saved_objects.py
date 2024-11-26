@@ -11,6 +11,7 @@ from elastic_stacker.utils.controller import GenericController
 
 logger = logging.getLogger("elastic_stacker")
 
+INTERMEDIATE_FILE_MAX_SIZE = 5e8
 
 class SavedObjectController(GenericController):
     """
@@ -149,13 +150,10 @@ class SavedObjectController(GenericController):
 
     def load(
         self,
-        intermediate_file_max_size: float = 5e8,  # 500 MB
-        overwrite: bool = True,
         delete_after_import: bool = False,
         allow_failure: bool = False,
-        no_resolve_broken: bool = False,
         data_directory: os.PathLike = None,
-        **kwargs,
+        **kwargs
     ):
         """
         Loads Saved Objects from files on disk and imports them into Kibana.
@@ -167,7 +165,7 @@ class SavedObjectController(GenericController):
             return
 
         with tempfile.SpooledTemporaryFile(
-            mode="ab+", max_size=intermediate_file_max_size
+            mode="ab+", max_size=INTERMEDIATE_FILE_MAX_SIZE
         ) as intermediate_file:
             object_count = 0
             for object_file in working_directory.glob("*/*.json"):
@@ -182,8 +180,8 @@ class SavedObjectController(GenericController):
             try:
                 results = self.import_objects(
                     intermediate_file,
-                    overwrite=overwrite,
-                    create_new_copies=(not overwrite),
+                    overwrite=True,
+                    create_new_copies=False,
                 )
                 logger.info(
                     "Successfully imported {count} out of {total} saved objects.".format(
@@ -206,28 +204,27 @@ class SavedObjectController(GenericController):
                     )
                     logger.warning(msg, extra={"error": failure["error"]})
                     failed_ids.append(failure["id"])
-                    if not no_resolve_broken:
-                        retries.append(
-                            {
-                                "id": failure["id"],
-                                "type": failure["type"],
-                                "overwrite": overwrite,
-                                "ignoreMissingReferences": True,
-                            }
-                        )
+                    retries.append(
+                        {
+                            "id": failure["id"],
+                            "type": failure["type"],
+                            "overwrite": True,
+                            "ignoreMissingReferences": True,
+                        }
+                    )
                 for success in results.get("successResults", []):
                     retries.append(
                         {
                             "id": success["id"],
                             "type": success["type"],
-                            "overwrite": overwrite,
+                            "overwrite": True,
                         }
                     )
                 intermediate_file.seek(0)
                 resolutions = self.import_objects(
                     intermediate_file,
-                    overwrite=overwrite,
-                    create_new_copies=(not overwrite),
+                    overwrite=True,
+                    create_new_copies=False,
                     resolve=True,
                     retries=retries,
                 )

@@ -1,4 +1,3 @@
-import getpass
 import logging
 import os
 
@@ -10,7 +9,7 @@ logger = logging.getLogger("elastic_stacker")
 
 
 def substitute_passwords(
-    d: dict, password_map: dict = {}, prompt: bool = False, watch_id: str = ""
+    d: dict, password_map: dict = {}, watch_id: str = ""
 ):
     """
     Search through a nested dict looking for redacted passwords.
@@ -24,11 +23,7 @@ def substitute_passwords(
             )
         if value == "::es_redacted::":
             username = d.get("username", "")
-            if prompt:
-                d[key] = getpass.getpass(
-                    f"Password for {username} in watch {watch_id}:"
-                )
-            elif username in password_map:
+            if username in password_map:
                 d[key] = password_map[username]
             else:
                 logger.error(
@@ -90,7 +85,6 @@ class WatchController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         allow_failure: bool = True,
         delete_after_import: bool = False,
-        prompt_credentials: bool = False,
         **kwargs,
     ):
         """
@@ -105,7 +99,6 @@ class WatchController(ElasticsearchAPIController):
 
             watch = substitute_passwords(
                 watch,
-                prompt=prompt_credentials,
                 password_map=self._options.get("watcher_users", {}),
                 watch_id=watch_id,
             )

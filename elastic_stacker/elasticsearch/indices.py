@@ -357,7 +357,6 @@ class IndexController(ElasticsearchAPIController):
         data_directory: os.PathLike = None,
         delete_after_import: bool = False,
         allow_failure: bool = False,
-        close_indices_to_modify_settings: bool = False,
         **kwargs,
     ):
         """
@@ -376,7 +375,7 @@ class IndexController(ElasticsearchAPIController):
                     self.update_index(
                         index_name,
                         index,
-                        close_index_to_modify_settings=close_indices_to_modify_settings,
+                        close_index_to_modify_settings=True,
                     )
                 else:
                     logger.warning(f"Creating new index {index_name}")
