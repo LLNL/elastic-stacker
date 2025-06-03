@@ -1,4 +1,6 @@
 import logging
+import os
+import ssl
 
 import httpx
 
@@ -42,6 +44,17 @@ class APIClient(httpx.Client):
             kwargs["cert"] = (tls_params["cert"], tls_params["key"])
         elif "cert" in tls_params:
             kwargs["cert"] = tls_params["cert"]
+
+        # restore old HTTPX behavior
+        ca = kwargs.pop("verify")
+        if ca is None:
+            pass
+        elif os.path.isdir(ca):
+            kwargs["verify"] = ssl.create_default_context(capath=ca)
+        elif os.path.isfile(ca):
+            kwargs["verify"] = ssl.create_default_context(cafile=ca)
+        else:
+            raise FileNotFoundError(ca)
 
         kwargs["event_hooks"] = {
             "response": [self.log_for_status, self.raise_for_status]
