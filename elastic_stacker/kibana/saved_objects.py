@@ -264,17 +264,27 @@ class SavedObjectController(GenericController):
         export across many separate files so they can be managed individually
         by e.g. version-control.
         """
-        known_types = {t["name"] for t in self.types()["types"]}
-
-        types = set(types) if types else known_types
-
-        invalid_types = types.difference(known_types)
-        assert not invalid_types, f"Invalid types: {invalid_types}. Valid types include: {known_types}"
-
         working_directory = self._get_working_dir(data_directory, create=True)
 
+        # If specific types are provided, use them
+        if types:
+            export_types = list(types)
+            logger.info(f"Exporting specified types: {export_types}")
+        else:
+            # Try to get known types, but if that fails, use wildcard export
+            try:
+                known_types_response = self.types()
+                known_types = {t["name"] for t in known_types_response["types"]}
+                export_types = list(known_types)
+                logger.info(f"Exporting all detected types: {export_types}")
+            except Exception as e:
+                logger.warning(f"Could not determine available types: {e}")
+                logger.info("Attempting wildcard export of all saved objects")
+                # Use wildcard - this will export everything available
+                export_types = ["*"]
+
         with self._export_stream(
-            types=types, exclude_export_details=False, stream=True
+            types=export_types, exclude_export_details=False, stream=True
         ) as export_stream:
             for line in export_stream.iter_lines():
                 # some things have a "title" and others have a "name", and others have only have an id
@@ -297,3 +307,4 @@ class SavedObjectController(GenericController):
                 self._write_file(output_file, obj)
         if purge or force_purge:
             self._purge_untouched_files(force=force_purge)
+
