@@ -46,7 +46,7 @@ class APIClient(httpx.Client):
             kwargs["cert"] = tls_params["cert"]
 
         # restore old HTTPX behavior
-        ca = kwargs.pop("verify")
+        ca = kwargs.pop("verify", None)
         if ca is None:
             pass
         elif os.path.isdir(ca):
