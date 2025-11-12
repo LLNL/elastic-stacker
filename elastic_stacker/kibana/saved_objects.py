@@ -98,7 +98,6 @@ class SavedObjectController(GenericController):
         create_new_copies: bool = None,
         overwrite: bool = None,
         compatibility_mode: bool = None,
-        timeout: int = 10,
         resolve: bool = False,
         retries: dict = None,
     ):
@@ -143,7 +142,7 @@ class SavedObjectController(GenericController):
         files = {"file": (upload_filename, file, "application/ndjson")}
 
         response = self._client.post(
-            endpoint, params=query_params, files=files, data=form_data, timeout=timeout
+            endpoint, params=query_params, files=files, data=form_data
         )
         return response.json()
 
